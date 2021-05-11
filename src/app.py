@@ -102,8 +102,9 @@ def start(doc):
             else: maxInd = -1
             new_frames = frames[cutSlider.value: maxInd]
             new_values = values[cutSlider.value: maxInd]
-            p1.y_range.start = min(new_values) - threshold / 20
-            p1.y_range.end = max(new_values) + threshold / 20
+            yrange = max(new_values) - min(new_values)
+            p1.y_range.start = min(new_values) - yrange / 10
+            p1.y_range.end = max(new_values) + yrange / 10
             source.data = {'frames': new_frames, 'intensity': new_values}
 
             n = kernelSlider1.value
