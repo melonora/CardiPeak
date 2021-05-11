@@ -1,0 +1,9 @@
+name: voltage
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - bokeh
+  - pandas
+prefix: C:\Users\w-mv\Anaconda3\envs\voltage
