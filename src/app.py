@@ -8,6 +8,8 @@ from bokeh.models.widgets import FileInput
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
+from utils import *
+
 
 def start(doc):
     def initialPlot(attr, old, new):
