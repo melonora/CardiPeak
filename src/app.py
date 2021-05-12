@@ -138,19 +138,17 @@ def start(doc):
                 while n != 0:
                     val2smooth = averageFilter(val2smooth, kernelSlider2.value)
                     n -= 1
-                    dy = derivative(val2smooth)
+                    derivative_values = derivative(val2smooth)
             else:
-                dy = derivative(new_values)
+                derivative_values = derivative(new_values)
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
-            new_frames = new_frames[cutSlider3.value: maxInd]
-            dy = dy[cutSlider3.value: maxInd]
-            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, dy,
-                                                                       threshold)
+            dy_frames = new_frames[cutSlider3.value: maxInd]
+            new_dy = derivative_values[cutSlider3.value: maxInd]
 
-            source3.data = {'frames': new_frames, 'dy': dy}
-            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+            source3.data = {'frames': dy_frames, 'dy': new_dy}
+
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
