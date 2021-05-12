@@ -15,6 +15,8 @@ def start(doc):
     def initialPlot(attr, old, new):
         decoded = b64decode(new)
         df = pd.read_csv(BytesIO(decoded), header=0, index_col=False)
+        name = decoded
+        print(name)
         frames, values = obtainFrameValueLst(df)
         threshold = (min(values[100:]) + max(values[100:])) / 2
         derivative_values = derivative(values)
@@ -75,18 +77,19 @@ def start(doc):
                     n -= 1
                 derivative_values = derivative(val2smooth)
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
+                tStart, value_start, tEnd, value_end = startPeak(new_frames, new_values, derivative_values,
+                                                                 threshold)
+                source6.data = {'timeStart': tStart, 'startValue': value_start}
+                source7.data = {'timeEnd': tEnd, 'endValue': value_end}
 
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
                 else:
                     maxInd = -1
-                new_frames = new_frames[cutSlider3.value: maxInd]
+                dy_frames = new_frames[cutSlider3.value: maxInd]
                 new_dy = derivative_values[cutSlider3.value: maxInd]
-                new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, derivative_values,
-                                                                           threshold)
-                source3.data = {'frames': new_frames, 'dy': new_dy}
-                source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
-                source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+                source3.data = {'frames': dy_frames, 'dy': new_dy}
+
                 rend.glyph.line_alpha = 1
             else:
                 rend.glyph.line_alpha = 0
@@ -110,19 +113,20 @@ def start(doc):
                     derivative_values = derivative(val2smooth)
             else:
                 derivative_values = derivative(new_values)
+            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, derivative_values,
+                                                                       threshold)
 
             source2.data = {'frames': new_frames, 'avgLine': val2smooth}
+            source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
+            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
-            new_frames = new_frames[cutSlider3.value: maxInd]
+            dy_frames = new_frames[cutSlider3.value: maxInd]
             new_dy = derivative_values[cutSlider3.value: maxInd]
 
-            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, new_dy,
-                                                                       threshold)
-            source3.data = {'frames': new_frames, 'dy': new_dy}
-            source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
-            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+            source3.data = {'frames': dy_frames, 'dy': new_dy}
+
 
         def cuttingDerivative(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1

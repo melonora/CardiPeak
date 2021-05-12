@@ -120,8 +120,8 @@ def getMax(frames: List[int], values: List[float], threshold: int) -> Tuple[List
     return timeMax, maxVals
 
 
-def startPeak(frames: List[int], values: List[float], derivative: List[float], threshold: int) \
-        -> Tuple[List[int], List[float], List[int], List[float]]:
+def startPeak(frames: List[int], values: List[float], derivative: List[float],
+              threshold: int) -> Tuple[List[int], List[float], List[int], List[float]]:
     """ Function to obtain the indexes of frames and the corresponding intensity values of the start and end of calcium
     intensity peaks.
 
@@ -163,10 +163,22 @@ def startPeak(frames: List[int], values: List[float], derivative: List[float], t
             if values[i] <= threshold:
                 indexBelow.append(i)
             else:
-                minIndex, maxIndex = indexBelow[0], indexBelow[-1]
-                if len(values[minIndex:maxIndex]) >= 20:
-                    timeStartPeaks.append(frames[derivative[minIndex:maxIndex].index(max(derivative[minIndex:maxIndex])) + minIndex])
-                    valueStartPeaks.append(values[derivative[minIndex:maxIndex].index(max(derivative[minIndex:maxIndex])) + minIndex])
+                subSlice = slice(indexBelow[0], indexBelow[-1])
+                diff = indexBelow[-1] - indexBelow[0]
+                if len(values[subSlice]) >= 20:
+                    max_dyFrameIndex = derivative[subSlice].index(max(derivative[subSlice])) + indexBelow[0]
+                    for t in range(max_dyFrameIndex, max_dyFrameIndex-diff, -1):
+                        if derivative[t] > 0:
+                            pass
+                        else:
+                            #valueStartPeaks.append(min(values[t], values[t+1]))
+                            if values[t] < values[t+1]:
+                                timeStartPeaks.append(frames[t])
+                                valueStartPeaks.append(values[t])
+                            else:
+                                timeStartPeaks.append(frames[t+1])
+                                valueStartPeaks.append(values[t+1])
+                            break
                 below = False
         else:
             if values[i] > threshold:
