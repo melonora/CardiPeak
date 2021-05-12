@@ -18,14 +18,12 @@ def start(doc):
         frames, values = obtainFrameValueLst(df)
         threshold = (min(values[100:]) + max(values[100:])) / 2
         derivative_values = derivative(values)
-        derivative2_values = derivative(derivative_values)
         time_max, max_val = getMax(frames, values, threshold)
         tStart, value_start, tEnd, value_end = startPeak(frames, values, derivative_values, threshold)
 
         source = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
         source3 = ColumnDataSource(data=dict(frames=frames, dy=derivative_values))
-        source4 = ColumnDataSource(data=dict(frames=frames, dy2=derivative2_values))
         source5 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
         source6 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
         source7 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
@@ -48,9 +46,8 @@ def start(doc):
         spanSlider = Slider(title='Span for minimum around time max dy peak', start=0, end=30, step=1, value=0)
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
-        p1.line('frames', 'intensity', source=source)
+        p1.line('frames', 'intensity', line_alpha = .5, source=source)
         p2.line('frames', 'dy', line_color='blue', source=source3)
-        p2.line('frames', 'dy2', line_color='red', source=source4)
         p1.circle('timeMaxima', 'maxima', source=source5, fill_color='red', size=7)
         p1.circle('timeStart', 'startValue', source=source6, fill_color='green', size=7)
         p1.circle('timeEnd', 'endValue', source=source7, fill_color='purple', size=7)
@@ -77,22 +74,20 @@ def start(doc):
                     val2smooth = averageFilter(val2smooth, kernelSlider2.value)
                     n -= 1
                 derivative_values = derivative(val2smooth)
-                derivative2_values = derivative(derivative_values)
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
+                tStart, value_start, tEnd, value_end = startPeak(new_frames, new_values, derivative_values,
+                                                                 threshold)
+                source6.data = {'timeStart': tStart, 'startValue': value_start}
+                source7.data = {'timeEnd': tEnd, 'endValue': value_end}
 
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
                 else:
                     maxInd = -1
-                new_frames = new_frames[cutSlider3.value: maxInd]
+                dy_frames = new_frames[cutSlider3.value: maxInd]
                 new_dy = derivative_values[cutSlider3.value: maxInd]
-                new_dy2 = derivative2_values[cutSlider3.value: maxInd]
-                new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, derivative_values,
-                                                                           threshold)
-                source3.data = {'frames': new_frames, 'dy': new_dy}
-                source4.data = {'frames': new_frames, 'dy2': new_dy2}
-                source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
-                source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+                source3.data = {'frames': dy_frames, 'dy': new_dy}
+
                 rend.glyph.line_alpha = 1
             else:
                 rend.glyph.line_alpha = 0
@@ -102,8 +97,9 @@ def start(doc):
             else: maxInd = -1
             new_frames = frames[cutSlider.value: maxInd]
             new_values = values[cutSlider.value: maxInd]
-            p1.y_range.start = min(new_values) - threshold / 20
-            p1.y_range.end = max(new_values) + threshold / 20
+            yrange = max(new_values) - min(new_values)
+            p1.y_range.start = min(new_values) - yrange / 10
+            p1.y_range.end = max(new_values) + yrange / 10
             source.data = {'frames': new_frames, 'intensity': new_values}
 
             n = kernelSlider1.value
@@ -115,25 +111,20 @@ def start(doc):
                     derivative_values = derivative(val2smooth)
             else:
                 derivative_values = derivative(new_values)
-
-            derivative2_values = derivative(derivative_values)
-
+            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, derivative_values,
+                                                                       threshold)
 
             source2.data = {'frames': new_frames, 'avgLine': val2smooth}
-
-
+            source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
+            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
-            new_frames = new_frames[cutSlider3.value: maxInd]
+            dy_frames = new_frames[cutSlider3.value: maxInd]
             new_dy = derivative_values[cutSlider3.value: maxInd]
-            new_dy2 = derivative2_values[cutSlider3.value: maxInd]
-            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, new_dy,
-                                                                       threshold)
-            source3.data = {'frames': new_frames, 'dy': new_dy}
-            source4.data = {'frames': new_frames, 'dy2': new_dy2}
-            source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
-            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+
+            source3.data = {'frames': dy_frames, 'dy': new_dy}
+
 
         def cuttingDerivative(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -147,22 +138,17 @@ def start(doc):
                 while n != 0:
                     val2smooth = averageFilter(val2smooth, kernelSlider2.value)
                     n -= 1
-                    dy = derivative(val2smooth)
+                    derivative_values = derivative(val2smooth)
             else:
-                dy = derivative(new_values)
-            dy2 = derivative(dy)
+                derivative_values = derivative(new_values)
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
-            new_frames = new_frames[cutSlider3.value: maxInd]
-            dy = dy[cutSlider3.value: maxInd]
-            dy2 = dy2[cutSlider3.value: maxInd]
-            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, dy,
-                                                                       threshold)
+            dy_frames = new_frames[cutSlider3.value: maxInd]
+            new_dy = derivative_values[cutSlider3.value: maxInd]
 
-            source3.data = {'frames': new_frames, 'dy': dy}
-            source4.data = {'frames': new_frames, 'dy2': dy2}
-            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+            source3.data = {'frames': dy_frames, 'dy': new_dy}
+
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
