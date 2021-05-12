@@ -25,9 +25,9 @@ def start(doc):
         source = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
         source3 = ColumnDataSource(data=dict(frames=frames, dy=derivative_values))
-        source5 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
-        source6 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
-        source7 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
+        source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
+        source5 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
+        source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
 
         TOOLTIPS = [("(x,y)", "($x, $y)")]
         tools1 = ['xwheel_zoom', 'xpan', 'reset']
@@ -51,9 +51,9 @@ def start(doc):
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
         p1.line('frames', 'intensity', line_alpha = .5, source=source)
         p2.line('frames', 'dy', line_color='blue', source=source3)
-        p1.circle('timeMaxima', 'maxima', source=source5, fill_color='red', size=7)
-        p1.circle('timeStart', 'startValue', source=source6, fill_color='green', size=7)
-        p1.circle('timeEnd', 'endValue', source=source7, fill_color='purple', size=7)
+        p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
+        p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
+        p1.circle('timeEnd', 'endValue', source=source6, fill_color='purple', size=7)
         p1.renderers.extend([hline])
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
@@ -80,8 +80,8 @@ def start(doc):
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
                 tStart, value_start, tEnd, value_end = startPeak(new_frames, new_values, derivative_values,
                                                                  threshold)
-                source6.data = {'timeStart': tStart, 'startValue': value_start}
-                source7.data = {'timeEnd': tEnd, 'endValue': value_end}
+                source5.data = {'timeStart': tStart, 'startValue': value_start}
+                source6.data = {'timeEnd': tEnd, 'endValue': value_end}
 
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
@@ -118,8 +118,8 @@ def start(doc):
                                                                        threshold)
 
             source2.data = {'frames': new_frames, 'avgLine': val2smooth}
-            source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
-            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+            source5.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
+            source6.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
@@ -127,7 +127,6 @@ def start(doc):
             new_dy = derivative_values[cutSlider3.value: maxInd]
 
             source3.data = {'frames': dy_frames, 'dy': new_dy}
-
 
         def cuttingDerivative(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -152,13 +151,13 @@ def start(doc):
 
             source3.data = {'frames': dy_frames, 'dy': new_dy}
 
-
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
         cutSlider.on_change('value', partial(cuttingPoints, frames=frames, values=values))
         cutSlider2.on_change('value', partial(cuttingPoints, frames=frames, values=values))
         cutSlider3.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
         cutSlider4.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
+        bt.on_click(partial(save, source, source4, source5, source6, fpsSpinner.value))
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
                                              cutSlider4, fpsSpinner, row(text_input2, bt)))
