@@ -9,6 +9,7 @@ from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
 from utils import *
+from data import *
 
 
 def start(doc):
