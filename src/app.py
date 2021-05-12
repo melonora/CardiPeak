@@ -3,8 +3,8 @@ from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
 import numpy as np
-from bokeh.models import Slider, Span, CrosshairTool
-from bokeh.models.widgets import FileInput
+from bokeh.models import Slider, Span, Button, Spinner
+from bokeh.models.widgets import FileInput, TextInput
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
@@ -44,7 +44,9 @@ def start(doc):
         cutSlider2 = Slider(title='Cut last x datapoints', start=0, end=100, step=1, value=0)
         cutSlider3 = Slider(title='Cut first x derivative', start=0, end=30, step=1, value=0)
         cutSlider4 = Slider(title='Cut last x derivative', start=0, end=30, step=1, value=0)
-        spanSlider = Slider(title='Span for minimum around time max dy peak', start=0, end=30, step=1, value=0)
+        fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
+        text_input2 = TextInput(value="", title="Enter name output file without file extension")
+        bt = Button(label='Click to save', height_policy='max')
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
         p1.line('frames', 'intensity', line_alpha = .5, source=source)
@@ -159,7 +161,7 @@ def start(doc):
         cutSlider4.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
-                                             cutSlider4, spanSlider))
+                                             cutSlider4, fpsSpinner, row(text_input2, bt)))
 
         doc.remove_root(layout)
         doc.add_root(layout2)
