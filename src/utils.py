@@ -178,3 +178,22 @@ def startPeak(frames: List[int], values: List[float], derivative: List[float],
                             break
                 below = True
     return timeStartPeaks, valueStartPeaks, timeEndPeaks, valueEndPeaks
+
+
+def frameTime(frames: List[int], fps: int) -> List[float]:
+    """ Function taking a list of integers corresponding to the indexes of frames and converting them to times using
+    fps.
+
+    Parameters
+    ----------
+    frames: List[int]
+        List of integers where each integer is the index of a frame.
+    fps: int
+        Framerate per second indicated by an integer.
+
+    Returns
+    -------
+    List[float]
+        List of floats representing the time at which each frame was taken.
+    """
+    return [1. / fps * i for i in range(len(frames))]
