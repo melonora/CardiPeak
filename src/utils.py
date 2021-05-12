@@ -167,11 +167,10 @@ def startPeak(frames: List[int], values: List[float], derivative: List[float],
                 diff = indexBelow[-1] - indexBelow[0]
                 if len(values[subSlice]) >= 20:
                     max_dyFrameIndex = derivative[subSlice].index(max(derivative[subSlice])) + indexBelow[0]
-                    for t in range(max_dyFrameIndex, max_dyFrameIndex-diff, -1):
+                    for t in range(max_dyFrameIndex, max(max_dyFrameIndex-diff, 0), -1):
                         if derivative[t] > 0:
                             pass
                         else:
-                            #valueStartPeaks.append(min(values[t], values[t+1]))
                             if values[t] < values[t+1]:
                                 timeStartPeaks.append(frames[t])
                                 valueStartPeaks.append(values[t])
@@ -185,8 +184,18 @@ def startPeak(frames: List[int], values: List[float], derivative: List[float],
                 pass
             else:
                 indexBelow = [i]
-                if len(derivative[i:i+100]) >= 20:
-                    timeEndPeaks.append(frames[derivative[i:i+100].index(min(derivative[i:i+100])) + i])
-                    valueEndPeaks.append(values[derivative[i:i+100].index(min(derivative[i:i+100])) + i])
+                if len(derivative[i:i+100]):
+                    min_dyFrameIndex = derivative[i:i+100].index(min(derivative[i:i+100])) + i
+                    for t in range(min_dyFrameIndex, len(derivative)-1):
+                        if derivative[t] < 0:
+                            pass
+                        else:
+                            if values[t] < values[t+1]:
+                                timeEndPeaks.append(frames[t])
+                                valueEndPeaks.append(values[t])
+                            else:
+                                timeEndPeaks.append(frames[t+1])
+                                valueEndPeaks.append(values[t+1])
+                            break
                 below = True
     return timeStartPeaks, valueStartPeaks, timeEndPeaks, valueEndPeaks

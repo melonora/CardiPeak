@@ -15,8 +15,6 @@ def start(doc):
     def initialPlot(attr, old, new):
         decoded = b64decode(new)
         df = pd.read_csv(BytesIO(decoded), header=0, index_col=False)
-        name = decoded
-        print(name)
         frames, values = obtainFrameValueLst(df)
         threshold = (min(values[100:]) + max(values[100:])) / 2
         derivative_values = derivative(values)
