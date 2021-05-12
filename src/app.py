@@ -46,7 +46,7 @@ def start(doc):
         spanSlider = Slider(title='Span for minimum around time max dy peak', start=0, end=30, step=1, value=0)
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
-        p1.line('frames', 'intensity', source=source)
+        p1.line('frames', 'intensity', line_alpha = .5, source=source)
         p2.line('frames', 'dy', line_color='blue', source=source3)
         p1.circle('timeMaxima', 'maxima', source=source5, fill_color='red', size=7)
         p1.circle('timeStart', 'startValue', source=source6, fill_color='green', size=7)
