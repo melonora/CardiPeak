@@ -163,7 +163,7 @@ def startPeak(frames: List[int], values: List[float], derivative: List[float],
                 pass
             else:
                 indexBelow = [i]
-                if len(derivative[i:i+100]):
+                if len(derivative[i:min(i+100, len(derivative))]) > 20:
                     min_dyFrameIndex = derivative[i:i+100].index(min(derivative[i:i+100])) + i
                     for t in range(min_dyFrameIndex, len(derivative)-1):
                         if derivative[t] < 0:
