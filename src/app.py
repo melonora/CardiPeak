@@ -20,7 +20,7 @@ def start(doc):
         threshold = (min(values[100:]) + max(values[100:])) / 2
         derivative_values = derivative(values)
         time_max, max_val = getMax(frames, values, threshold)
-        tStart, value_start, tEnd, value_end = startPeak(frames, values, derivative_values, threshold)
+        tStart, value_start, tEnd, value_end = startEndPeak(frames, values, derivative_values, threshold)
 
         source = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
@@ -78,7 +78,7 @@ def start(doc):
                     n -= 1
                 derivative_values = derivative(val2smooth)
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
-                tStart, value_start, tEnd, value_end = startPeak(new_frames, new_values, derivative_values,
+                tStart, value_start, tEnd, value_end = startEndPeak(new_frames, new_values, derivative_values,
                                                                  threshold)
                 source5.data = {'timeStart': tStart, 'startValue': value_start}
                 source6.data = {'timeEnd': tEnd, 'endValue': value_end}
@@ -114,7 +114,7 @@ def start(doc):
                     derivative_values = derivative(val2smooth)
             else:
                 derivative_values = derivative(new_values)
-            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, derivative_values,
+            new_tStart, nvalue_start, new_tEnd, nvalue_end = startEndPeak(new_frames, new_values, derivative_values,
                                                                        threshold)
 
             source2.data = {'frames': new_frames, 'avgLine': val2smooth}

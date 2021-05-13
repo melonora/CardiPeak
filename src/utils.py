@@ -99,8 +99,8 @@ def getMax(frames: List[int], values: List[float], threshold: int) -> Tuple[List
     return timeMax, maxVals
 
 
-def startPeak(frames: List[int], values: List[float], derivative: List[float],
-              threshold: int) -> Tuple[List[int], List[float], List[int], List[float]]:
+def startEndPeak(frames: List[int], values: List[float], derivative: List[float],
+                 threshold: int) -> Tuple[List[int], List[float], List[int], List[float]]:
     """ Function to obtain the indexes of frames and the corresponding intensity values of the start and end of calcium
     intensity peaks.
 
@@ -159,11 +159,12 @@ def startPeak(frames: List[int], values: List[float], derivative: List[float],
                             break
                 below = False
         else:
-            if values[i] > threshold:
+            if values[i] >= threshold:
                 pass
             else:
                 indexBelow = [i]
-                if len(derivative[i:min(i+100, len(derivative))]) > 20:
+                if all([i < threshold for i in values[i:min(i+100, len(values))]]) and \
+                        len(derivative[i:min(i+100, len(derivative))]) > 20:
                     min_dyFrameIndex = derivative[i:i+100].index(min(derivative[i:i+100])) + i
                     for t in range(min_dyFrameIndex, len(derivative)-1):
                         if derivative[t] < 0:
