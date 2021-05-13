@@ -181,20 +181,22 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
     return timeStartPeaks, valueStartPeaks, timeEndPeaks, valueEndPeaks
 
 
-def frameTime(frames: List[int], fps: int) -> List[float]:
+def frameTime(frames: List[Tuple[int, float, str]], fps: int) -> List[Tuple[int, float, str, float]]:
     """ Function taking a list of integers corresponding to the indexes of frames and converting them to times using
     fps.
 
     Parameters
     ----------
-    frames: List[int]
-        List of integers where each integer is the index of a frame.
+    frames: List[Tuple[int, float, str]]
+        List of tuples with an integer representing the frame index to be converted to a time.
     fps: int
         Framerate per second indicated by an integer.
 
     Returns
     -------
-    List[float]
-        List of floats representing the time at which each frame was taken.
+    List[Tuple[int, float, str, float]]
+        List of tuples where the last float is the time.
     """
-    return [1. / fps * i for i in range(len(frames))]
+    for i in range(len(frames)):
+        frames[i] += (1. / fps * frames[i][0],)
+    return frames
