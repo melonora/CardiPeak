@@ -200,3 +200,32 @@ def frameTime(frames: List[Tuple[int, float, str]], fps: int) -> List[Tuple[int,
     for i in range(len(frames)):
         frames[i] += (1. / fps * frames[i][0],)
     return frames
+
+
+def getAmplitudes(peakPoints: List[Tuple[int, float, str, float]]) -> List[float]:
+    """ Function returning a list of peak amplitudes. The peak amplitudes are calculated as the average of the
+    difference between the max value of the peak and the value at the start of the peak and the max value of the peak
+    and the value at the end of the peak.
+
+    Parameters
+    ----------
+    peakPoints: List[Tuple[int, float, str, float]]
+        List of tuples where each tuple contains information regarding either a start point, max point or end point of
+        a peak. The first element corresponds to the frame index, the second element to the intensity value, the third
+        element indicates whether the point is either the start, max or end of a peak and the fourth element indicates
+        the time after 0 at which the frame was taken.
+
+    Returns
+    -------
+    amplitudes: List[float]
+        A list of floats where each float corresponds to the peak amplitude of a peak. The elements are in chronological
+        order.
+    """
+    amplitudes = []
+    for i in range(len(peakPoints)):
+        if peakPoints[i][2] == 'start':
+            try:
+                amplitudes.append((peakPoints[i+1][1] - peakPoints[i][1] + peakPoints[i+1][1] - peakPoints[i+2][1]) / 2)
+            except IndexError:
+                pass
+    return amplitudes
