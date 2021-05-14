@@ -40,6 +40,7 @@ def start(doc):
         fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
         text_input2 = TextInput(value_input="", title="Enter name output file without file extension")
         bt = Button(label='Click to save', height_policy='max')
+        fileInp2 = FileInput(accept=".csv")
 
         source = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
@@ -172,11 +173,12 @@ def start(doc):
         text_input2.on_change('value', output_data)
         fpsSpinner.on_change('value', output_data)
         bt.on_click(partial(save, source, source4, source5, source6, settings, output))
+        fileInp2.on_change('value', initialPlot)
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
-                                             cutSlider4, fpsSpinner, row(text_input2, bt)))
-
-        doc.remove_root(layout)
+                                             cutSlider4, fpsSpinner, row(text_input2, bt), fileInp2))
+        #doc.remove_root(layout2)
+        doc.clear()
         doc.add_root(layout2)
 
     fileInp = FileInput(accept=".csv")
