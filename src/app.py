@@ -3,12 +3,13 @@ from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
 import numpy as np
-from bokeh.models import Slider, Span, CrosshairTool
-from bokeh.models.widgets import FileInput
+from bokeh.models import Slider, Span, Button, Spinner
+from bokeh.models.widgets import FileInput, TextInput
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
 from utils import *
+from data import *
 
 
 def start(doc):
@@ -19,14 +20,7 @@ def start(doc):
         threshold = (min(values[100:]) + max(values[100:])) / 2
         derivative_values = derivative(values)
         time_max, max_val = getMax(frames, values, threshold)
-        tStart, value_start, tEnd, value_end = startPeak(frames, values, derivative_values, threshold)
-
-        source = ColumnDataSource(data=dict(frames=frames, intensity=values))
-        source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
-        source3 = ColumnDataSource(data=dict(frames=frames, dy=derivative_values))
-        source5 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
-        source6 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
-        source7 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
+        tStart, value_start, tEnd, value_end = startEndPeak(frames, values, derivative_values, threshold)
 
         TOOLTIPS = [("(x,y)", "($x, $y)")]
         tools1 = ['xwheel_zoom', 'xpan', 'reset']
@@ -43,14 +37,27 @@ def start(doc):
         cutSlider2 = Slider(title='Cut last x datapoints', start=0, end=100, step=1, value=0)
         cutSlider3 = Slider(title='Cut first x derivative', start=0, end=30, step=1, value=0)
         cutSlider4 = Slider(title='Cut last x derivative', start=0, end=30, step=1, value=0)
-        spanSlider = Slider(title='Span for minimum around time max dy peak', start=0, end=30, step=1, value=0)
+        fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
+        text_input2 = TextInput(value_input="", title="Enter name output file without file extension")
+        bt = Button(label='Click to save', height_policy='max')
+        fileInp2 = FileInput(accept=".csv")
+
+        source = ColumnDataSource(data=dict(frames=frames, intensity=values))
+        source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
+        source3 = ColumnDataSource(data=dict(frames=frames, dy=derivative_values))
+        source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
+        source5 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
+        source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
+        output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value]))
+        settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
+                                              SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value]))
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
         p1.line('frames', 'intensity', line_alpha = .5, source=source)
         p2.line('frames', 'dy', line_color='blue', source=source3)
-        p1.circle('timeMaxima', 'maxima', source=source5, fill_color='red', size=7)
-        p1.circle('timeStart', 'startValue', source=source6, fill_color='green', size=7)
-        p1.circle('timeEnd', 'endValue', source=source7, fill_color='purple', size=7)
+        p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
+        p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
+        p1.circle('timeEnd', 'endValue', source=source6, fill_color='purple', size=7)
         p1.renderers.extend([hline])
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
@@ -75,10 +82,11 @@ def start(doc):
                     n -= 1
                 derivative_values = derivative(val2smooth)
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
-                tStart, value_start, tEnd, value_end = startPeak(new_frames, new_values, derivative_values,
+                tStart, value_start, tEnd, value_end = startEndPeak(new_frames, new_values, derivative_values,
                                                                  threshold)
-                source6.data = {'timeStart': tStart, 'startValue': value_start}
-                source7.data = {'timeEnd': tEnd, 'endValue': value_end}
+                source5.data = {'timeStart': tStart, 'startValue': value_start}
+                source6.data = {'timeEnd': tEnd, 'endValue': value_end}
+
 
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
@@ -91,6 +99,9 @@ def start(doc):
                 rend.glyph.line_alpha = 1
             else:
                 rend.glyph.line_alpha = 0
+
+            settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
+                             'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value]}
 
         def cuttingPoints(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -111,12 +122,12 @@ def start(doc):
                     derivative_values = derivative(val2smooth)
             else:
                 derivative_values = derivative(new_values)
-            new_tStart, nvalue_start, new_tEnd, nvalue_end = startPeak(new_frames, new_values, derivative_values,
+            new_tStart, nvalue_start, new_tEnd, nvalue_end = startEndPeak(new_frames, new_values, derivative_values,
                                                                        threshold)
 
             source2.data = {'frames': new_frames, 'avgLine': val2smooth}
-            source6.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
-            source7.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+            source5.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
+            source6.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
@@ -124,7 +135,8 @@ def start(doc):
             new_dy = derivative_values[cutSlider3.value: maxInd]
 
             source3.data = {'frames': dy_frames, 'dy': new_dy}
-
+            settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
+                             'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value]}
 
         def cuttingDerivative(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -149,6 +161,8 @@ def start(doc):
 
             source3.data = {'frames': dy_frames, 'dy': new_dy}
 
+        def output_data(attr, old, new):
+            output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value]}
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
@@ -156,11 +170,15 @@ def start(doc):
         cutSlider2.on_change('value', partial(cuttingPoints, frames=frames, values=values))
         cutSlider3.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
         cutSlider4.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
+        text_input2.on_change('value', output_data)
+        fpsSpinner.on_change('value', output_data)
+        bt.on_click(partial(save, source, source4, source5, source6, settings, output))
+        fileInp2.on_change('value', initialPlot)
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
-                                             cutSlider4, spanSlider))
-
-        doc.remove_root(layout)
+                                             cutSlider4, fpsSpinner, row(text_input2, bt), fileInp2))
+        #doc.remove_root(layout2)
+        doc.clear()
         doc.add_root(layout2)
 
     fileInp = FileInput(accept=".csv")
