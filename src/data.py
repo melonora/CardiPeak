@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Tuple, List
-from utils import frameTime, getAmplitudes
+from src.utils import frameTime, getAmplitudes
 import os
 
 

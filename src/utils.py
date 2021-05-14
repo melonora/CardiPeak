@@ -194,7 +194,7 @@ def frameTime(frames: List[Tuple[int, float, str]], fps: int) -> List[Tuple[int,
 
     Returns
     -------
-    List[Tuple[int, float, str, float]]
+    frames: List[Tuple[int, float, str, float]]
         List of tuples where the last float is the time.
     """
     for i in range(len(frames)):

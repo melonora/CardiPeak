@@ -1,15 +1,13 @@
-import pandas as pd
 from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
-import numpy as np
 from bokeh.models import Slider, Span, Button, Spinner
 from bokeh.models.widgets import FileInput, TextInput
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
-from utils import *
-from data import *
+from src.utils import *
+from src.data import *
 
 
 def start(doc):
@@ -177,7 +175,6 @@ def start(doc):
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
                                              cutSlider4, fpsSpinner, row(text_input2, bt), fileInp2))
-        #doc.remove_root(layout2)
         doc.clear()
         doc.add_root(layout2)
 
