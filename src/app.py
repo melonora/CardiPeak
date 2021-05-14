@@ -38,7 +38,7 @@ def start(doc):
         cutSlider3 = Slider(title='Cut first x derivative', start=0, end=30, step=1, value=0)
         cutSlider4 = Slider(title='Cut last x derivative', start=0, end=30, step=1, value=0)
         fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
-        text_input2 = TextInput(value="", title="Enter name output file without file extension")
+        text_input2 = TextInput(value_input="", title="Enter name output file without file extension")
         bt = Button(label='Click to save', height_policy='max')
 
         source = ColumnDataSource(data=dict(frames=frames, intensity=values))
@@ -47,6 +47,7 @@ def start(doc):
         source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
         source5 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
         source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
+        output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
                                               SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value]))
 
@@ -159,13 +160,18 @@ def start(doc):
 
             source3.data = {'frames': dy_frames, 'dy': new_dy}
 
+        def output_data(attr, old, new):
+            output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value]}
+
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
         cutSlider.on_change('value', partial(cuttingPoints, frames=frames, values=values))
         cutSlider2.on_change('value', partial(cuttingPoints, frames=frames, values=values))
         cutSlider3.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
         cutSlider4.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
-        bt.on_click(partial(save, source, source4, source5, source6, fpsSpinner.value, settings))
+        text_input2.on_change('value', output_data)
+        fpsSpinner.on_change('value', output_data)
+        bt.on_click(partial(save, source, source4, source5, source6, settings, output))
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
                                              cutSlider4, fpsSpinner, row(text_input2, bt)))
