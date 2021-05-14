@@ -85,11 +85,11 @@ def save(raw_data, max_data, start_data, end_data, settings, output_data):
     pdMaxEndT = pd.DataFrame({'max_end(s)': maxEndTime})
     pdPeakTime = pd.DataFrame({'Peak_time(s)': peakTime})
     pdAmplitudes = pd.DataFrame({'Peak_amplitude': amplitudes})
-    pdSettings = pd.DataFrame({'settings': [i for i in settings.data.items()]})
+    pdSettings = pd.DataFrame(settings.data)
     pd_complete = pd.concat([pdData, pdBgInterval, pdPeakMaxInterval, pdStartMaxT, pdMaxEndT, pdPeakTime, pdAmplitudes,
                              pdSettings], ignore_index=True, axis=1)
     pd_complete.columns = ['Frame_index', 'Time_(s)', 'Intensity', 'Type', 'background_interval', 'Peak_max_interval',
-                           'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude', 'Settings']
+                           'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] + [i for i in settings.data]
     outputDir = '../output'
     try:
         os.mkdir(outputDir)
