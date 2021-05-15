@@ -112,7 +112,7 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
             raw_data.to_excel(writer, index=False, sheet_name='Raw_data')
 
         workbook = openpyxl.load_workbook(outputDir + '/' + outputFile + extension)
-        ws1 = workbook.create_sheet("Plot")
+        ws1 = workbook.create_sheet("Plots")
         img = openpyxl.drawing.image.Image(outputDir + '/image.png')
         img.anchor = 'B2'
         img2 = openpyxl.drawing.image.Image(outputDir + '/image2.png')
@@ -120,3 +120,5 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
         ws1.add_image(img)
         ws1.add_image(img2)
         workbook.save(outputDir + '/' + outputFile + extension)
+        os.remove(outputDir + '/image.png')
+        os.remove(outputDir + '/image2.png')
