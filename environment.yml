@@ -6,4 +6,9 @@ dependencies:
   - python=3.8
   - bokeh
   - pandas
+  - firefox
+  - selenium
+  - geckodriver
+  - openpyxl
+  - python-chromedriver-binary
 prefix: C:\Users\w-mv\Anaconda3\envs\voltage
