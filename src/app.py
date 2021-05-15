@@ -47,7 +47,8 @@ def start(doc):
         source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
         source5 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
         source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
-        output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value], ext=[ext.active]))
+        output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value],
+                                            ext=[ext.labels[ext.active]]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
                                               SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value]))
 
@@ -161,7 +162,8 @@ def start(doc):
             source3.data = {'frames': dy_frames, 'dy': new_dy}
 
         def output_data(attr, old, new):
-            output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value], 'ext': [ext.active]}
+            output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value],
+                           'ext': [ext.labels[ext.active]]}
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
