@@ -1,7 +1,9 @@
 import pandas as pd
+from bokeh.io import export_png
 from typing import Tuple, List
 from src.utils import frameTime, getAmplitudes
 import os
+import openpyxl
 
 
 def obtainFrameValueLst(df: pd.DataFrame) -> Tuple[List[int], List[float]]:
@@ -28,10 +30,11 @@ def obtainFrameValueLst(df: pd.DataFrame) -> Tuple[List[int], List[float]]:
     return frames.tolist(), values.tolist()
 
 
-def save(raw_data, max_data, start_data, end_data, settings, output_data):
+def save(analyzed_data, max_data, start_data, end_data, settings, output_data, plot1, plot2, raw_data):
     fps = output_data.data['fps'][0]
     outputFile = output_data.data['output_file'][0]
-    lsData = list(zip(raw_data.data['frames'], raw_data.data['intensity']))
+    extension = output_data.data['ext'][0]
+    lsData = list(zip(analyzed_data.data['frames'], analyzed_data.data['intensity']))
     lsMax = frameTime(list(zip(max_data.data['timeMaxima'], max_data.data['maxima'],
                                ['max'] * len(max_data.data['maxima']))), fps)
     lsStart = frameTime(list(zip(start_data.data['timeStart'], start_data.data['startValue'],
@@ -90,7 +93,10 @@ def save(raw_data, max_data, start_data, end_data, settings, output_data):
                              pdSettings], ignore_index=True, axis=1)
     pd_complete.columns = ['Frame_index', 'Time_(s)', 'Intensity', 'Type', 'background_interval', 'Peak_max_interval',
                            'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] + [i for i in settings.data]
+
     outputDir = '../output'
+    export_png(plot1, filename=outputDir + '/image.png')
+    export_png(plot2, filename=outputDir + '/image2.png')
     try:
         os.mkdir(outputDir)
     except FileExistsError:
@@ -98,7 +104,21 @@ def save(raw_data, max_data, start_data, end_data, settings, output_data):
 
     if outputFile == '':
         pd_complete.to_csv(outputDir + '/output.csv', index=False)
-    else:
-        pd_complete.to_csv(outputDir + '/' + outputFile + '.csv', index=False)
+    elif extension == '.csv':
+        pd_complete.to_csv(outputDir + '/' + outputFile + extension, index=False)
+    elif extension == '.xlsx':
+        with pd.ExcelWriter(outputDir + '/' + outputFile + extension) as writer:
+            pd_complete.to_excel(writer, index=False, sheet_name='Analysis_results')
+            raw_data.to_excel(writer, index=False, sheet_name='Raw_data')
 
-
+        workbook = openpyxl.load_workbook(outputDir + '/' + outputFile + extension)
+        ws1 = workbook.create_sheet("Plots")
+        img = openpyxl.drawing.image.Image(outputDir + '/image.png')
+        img.anchor = 'B2'
+        img2 = openpyxl.drawing.image.Image(outputDir + '/image2.png')
+        img2.anchor = 'B27'
+        ws1.add_image(img)
+        ws1.add_image(img2)
+        workbook.save(outputDir + '/' + outputFile + extension)
+        os.remove(outputDir + '/image.png')
+        os.remove(outputDir + '/image2.png')

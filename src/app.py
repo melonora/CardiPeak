@@ -2,7 +2,7 @@ from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
 from bokeh.models import Slider, Span, Button, Spinner
-from bokeh.models.widgets import FileInput, TextInput
+from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
@@ -25,7 +25,7 @@ def start(doc):
 
         p1 = figure(title='Intensity over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
                     plot_height=450, tooltips=TOOLTIPS)
-        p2 = figure(title='Derivatives over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
+        p2 = figure(title='Derivative over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
                     plot_height=450, tooltips=TOOLTIPS)
         p1.x_range = p2.x_range
 
@@ -37,6 +37,7 @@ def start(doc):
         cutSlider4 = Slider(title='Cut last x derivative', start=0, end=30, step=1, value=0)
         fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
         text_input2 = TextInput(value_input="", title="Enter name output file without file extension")
+        ext = RadioButtonGroup(labels=['.csv', '.xlsx'], orientation='vertical', height_policy='min', active=0)
         bt = Button(label='Click to save', height_policy='max')
         fileInp2 = FileInput(accept=".csv")
 
@@ -46,7 +47,8 @@ def start(doc):
         source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
         source5 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
         source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
-        output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value]))
+        output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value],
+                                            ext=[ext.labels[ext.active]]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
                                               SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value]))
 
@@ -160,7 +162,8 @@ def start(doc):
             source3.data = {'frames': dy_frames, 'dy': new_dy}
 
         def output_data(attr, old, new):
-            output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value]}
+            output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value],
+                           'ext': [ext.labels[ext.active]]}
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
@@ -169,12 +172,13 @@ def start(doc):
         cutSlider3.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
         cutSlider4.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
         text_input2.on_change('value', output_data)
+        ext.on_change('active', output_data)
         fpsSpinner.on_change('value', output_data)
-        bt.on_click(partial(save, source, source4, source5, source6, settings, output))
+        bt.on_click(partial(save, source, source4, source5, source6, settings, output, p1, p2, df))
         fileInp2.on_change('value', initialPlot)
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
-                                             cutSlider4, fpsSpinner, row(text_input2, bt), fileInp2))
+                                             cutSlider4, fpsSpinner, row(text_input2, ext, bt), fileInp2))
         doc.clear()
         doc.add_root(layout2)
 
