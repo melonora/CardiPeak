@@ -25,7 +25,7 @@ def start(doc):
 
         p1 = figure(title='Intensity over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
                     plot_height=450, tooltips=TOOLTIPS)
-        p2 = figure(title='Derivatives over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
+        p2 = figure(title='Derivative over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
                     plot_height=450, tooltips=TOOLTIPS)
         p1.x_range = p2.x_range
 
@@ -170,7 +170,7 @@ def start(doc):
         cutSlider4.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
         text_input2.on_change('value', output_data)
         fpsSpinner.on_change('value', output_data)
-        bt.on_click(partial(save, source, source4, source5, source6, settings, output))
+        bt.on_click(partial(save, source, source4, source5, source6, settings, output, p1, p2))
         fileInp2.on_change('value', initialPlot)
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
