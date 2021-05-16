@@ -1,7 +1,7 @@
 from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
-from bokeh.models import Slider, Span, Button, Spinner
+from bokeh.models import Slider, Span, Button, Spinner, TapTool
 from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup
 from io import BytesIO
 from bokeh.server.server import Server
@@ -55,10 +55,11 @@ def start(doc):
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
         p1.line('frames', 'intensity', line_alpha = .5, source=source)
         p2.line('frames', 'dy', line_color='blue', source=source3)
-        p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
-        p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
-        p1.circle('timeEnd', 'endValue', source=source6, fill_color='purple', size=7)
+        max_rend = p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
+        start_rend = p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
+        end_rend = p1.circle('timeEnd', 'endValue', source=source6, fill_color='purple', size=7)
         p1.renderers.extend([hline])
+        p1.add_tools(TapTool(renderers=[max_rend, start_rend, end_rend]))
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
 
