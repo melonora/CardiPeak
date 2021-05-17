@@ -1,13 +1,17 @@
 from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
-from bokeh.models import Slider, Span, Button, Spinner, TapTool
+from bokeh.models import Slider, Span, Button, Spinner, TapTool, CDSView, IndexFilter
 from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
 from src.utils import *
 from src.data import *
+
+
+def callback(attr, old, new, source, frames, values):
+    print("attr: {} - old: {} - new: {}".format(attr, old, new))
 
 
 def start(doc):
@@ -53,7 +57,7 @@ def start(doc):
                                               SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value]))
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
-        p1.line('frames', 'intensity', line_alpha = .5, source=source)
+        p1.line('frames', 'intensity', line_alpha=.5, source=source)
         p2.line('frames', 'dy', line_color='blue', source=source3)
         max_rend = p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
         start_rend = p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
@@ -177,6 +181,9 @@ def start(doc):
         fpsSpinner.on_change('value', output_data)
         bt.on_click(partial(save, source, source4, source5, source6, settings, output, p1, p2, df))
         fileInp2.on_change('value', initialPlot)
+        source4.selected.on_change('indices', partial(callback, source=source4, frames=frames, values=values))
+        source5.selected.on_change('indices', partial(callback, source=source5, frames=frames, values=values))
+        source6.selected.on_change('indices', partial(callback, source=source6, frames=frames, values=values))
 
         layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
                                              cutSlider4, fpsSpinner, row(text_input2, ext, bt), fileInp2))
