@@ -1,7 +1,7 @@
 from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
-from bokeh.models import Slider, Span, Button, Spinner, TapTool, CDSView, IndexFilter
+from bokeh.models import Slider, Span, Button, Spinner, TapTool
 from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup
 from io import BytesIO
 from bokeh.server.server import Server
@@ -11,7 +11,8 @@ from src.data import *
 
 
 def callback(attr, old, new, source, frames, values):
-    print("attr: {} - old: {} - new: {}".format(attr, old, new))
+    # print("attr: {} - old: {} - new: {}".format(attr, old, new))
+    data_x, data_y = tuple(source.data[i][s] for i in source.data.keys() for s in new)
 
 
 def start(doc):
