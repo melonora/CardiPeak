@@ -8,11 +8,32 @@ from bokeh.server.server import Server
 from base64 import b64decode
 from src.utils import *
 from src.data import *
+from pynput.keyboard import Key, Listener
 
 
 def callback(attr, old, new, source, frames, values):
-    # print("attr: {} - old: {} - new: {}".format(attr, old, new))
-    data_x, data_y = tuple(source.data[i][s] for i in source.data.keys() for s in new)
+    global index
+
+    def on_press(key):
+        global index
+        if key == Key.left:
+            index -= 1
+            print(index)
+        elif key == Key.right:
+            index += 1
+            print(index)
+
+    def on_release(key):
+        if key == Key.esc:
+            return False
+    try:
+        data_x, data_y = tuple(source.data[i][s] for i in source.data.keys() for s in new)
+        index = frames.index(data_x)
+        print('index: {}'.format(index))
+        with Listener(on_press=on_press, on_release=on_release) as listener:
+            listener.join()
+    except ValueError:
+        pass
 
 
 def start(doc):
