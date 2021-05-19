@@ -11,31 +11,6 @@ from src.data import *
 from pynput.keyboard import Key, Listener
 
 
-def callback(attr, old, new, source, frames, values):
-    global index
-
-    def on_press(key):
-        global index
-        if key == Key.left:
-            index -= 1
-            print(index)
-        elif key == Key.right:
-            index += 1
-            print(index)
-
-    def on_release(key):
-        if key == Key.esc:
-            return False
-    try:
-        data_x, data_y = tuple(source.data[i][s] for i in source.data.keys() for s in new)
-        index = frames.index(data_x)
-        print('index: {}'.format(index))
-        with Listener(on_press=on_press, on_release=on_release) as listener:
-            listener.join()
-    except ValueError:
-        pass
-
-
 def start(doc):
     def initialPlot(attr, old, new):
         decoded = b64decode(new)
@@ -191,6 +166,37 @@ def start(doc):
         def output_data(attr, old, new):
             output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value],
                            'ext': [ext.labels[ext.active]]}
+
+        def callback(attr, old, new, source, frames, values):
+            global index
+
+            def on_press(key):
+                global index
+                print(source.data)
+
+                print(new)
+                print(source.data)
+                if key == Key.left:
+                    dict_keys = source.data.keys()
+                        del source.data[key][new[0]]
+                    index -= 1
+                elif key == Key.right:
+                    for key in source.data:
+                        del source.data[key][new[0]]
+                    index += 1
+
+            def on_release(key):
+                if key == Key.esc:
+                    return False
+
+            try:
+                data_x, data_y = tuple(source.data[i][s] for i in source.data.keys() for s in new)
+                index = frames.index(data_x)
+                print('index: {}'.format(index))
+                with Listener(on_press=on_press, on_release=on_release) as listener:
+                    listener.join()
+            except ValueError:
+                pass
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
