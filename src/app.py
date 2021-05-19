@@ -6,8 +6,8 @@ from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
-from src.utils import *
-from src.data import *
+from utils import *
+from data import *
 
 
 def start(doc):

@@ -1,7 +1,7 @@
 import pandas as pd
 from bokeh.io import export_png
 from typing import Tuple, List
-from src.utils import frameTime, getAmplitudes
+from utils import frameTime, getAmplitudes
 import os
 import openpyxl
 
@@ -95,12 +95,13 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
                            'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] + [i for i in settings.data]
 
     outputDir = '../output'
-    export_png(plot1, filename=outputDir + '/image.png')
-    export_png(plot2, filename=outputDir + '/image2.png')
     try:
         os.mkdir(outputDir)
     except FileExistsError:
         pass
+    export_png(plot1, filename=outputDir + '/image.png')
+    export_png(plot2, filename=outputDir + '/image2.png')
+
 
     if outputFile == '':
         pd_complete.to_csv(outputDir + '/output.csv', index=False)
