@@ -99,15 +99,14 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
         os.mkdir(outputDir)
     except FileExistsError:
         pass
-    export_png(plot1, filename=outputDir + '/image.png')
-    export_png(plot2, filename=outputDir + '/image2.png')
-
 
     if outputFile == '':
         pd_complete.to_csv(outputDir + '/output.csv', index=False)
     elif extension == '.csv':
         pd_complete.to_csv(outputDir + '/' + outputFile + extension, index=False)
     elif extension == '.xlsx':
+        export_png(plot1, filename=outputDir + '/image.png')
+        export_png(plot2, filename=outputDir + '/image2.png')
         with pd.ExcelWriter(outputDir + '/' + outputFile + extension) as writer:
             pd_complete.to_excel(writer, index=False, sheet_name='Analysis_results')
             raw_data.to_excel(writer, index=False, sheet_name='Raw_data')
