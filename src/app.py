@@ -172,18 +172,21 @@ def start(doc):
 
             def on_press(key):
                 global index
-                print(source.data)
-
-                print(new)
-                print(source.data)
+                dict_keys = list(source.data)
                 if key == Key.left:
-                    dict_keys = source.data.keys()
-                        del source.data[key][new[0]]
-                    index -= 1
+                    try:
+                        index -= 1
+                        source.patch({dict_keys[0]: [(new[0], frames[index])],
+                                      dict_keys[1]: [(new[0], values[index])]})
+                    except ValueError:
+                        pass
                 elif key == Key.right:
-                    for key in source.data:
-                        del source.data[key][new[0]]
-                    index += 1
+                    try:
+                        index += 1
+                        source.patch({dict_keys[0]: [(new[0], frames[index])],
+                                      dict_keys[1]: [(new[0], values[index])]})
+                    except ValueError:
+                        pass
 
             def on_release(key):
                 if key == Key.esc:
