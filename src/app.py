@@ -8,7 +8,6 @@ from bokeh.server.server import Server
 from base64 import b64decode
 from src.utils import *
 from src.data import *
-from pynput.keyboard import Key, Listener
 
 
 def start(doc):
@@ -36,13 +35,14 @@ def start(doc):
         cutSlider2 = Slider(title='Cut last x datapoints', start=0, end=100, step=1, value=0)
         cutSlider3 = Slider(title='Cut first x derivative', start=0, end=30, step=1, value=0)
         cutSlider4 = Slider(title='Cut last x derivative', start=0, end=30, step=1, value=0)
+        valueSlider = Slider(title='Selected datapoint index', start=0, end=len(frames), value=0, margin=(0, 30, 0, 40))
         fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
         text_input2 = TextInput(value_input="", title="Enter name output file without file extension")
         ext = RadioButtonGroup(labels=['.csv', '.xlsx'], orientation='vertical', height_policy='min', active=0)
         bt = Button(label='Click to save', height_policy='max')
         fileInp2 = FileInput(accept=".csv")
 
-        source = ColumnDataSource(data=dict(frames=frames, intensity=values))
+        source1 = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
         source3 = ColumnDataSource(data=dict(frames=frames, dy=derivative_values))
         source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
@@ -54,7 +54,7 @@ def start(doc):
                                               SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value]))
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
-        p1.line('frames', 'intensity', line_alpha=.5, source=source)
+        p1.line('frames', 'intensity', line_alpha=.5, source=source1)
         p2.line('frames', 'dy', line_color='blue', source=source3)
         max_rend = p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
         start_rend = p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
@@ -89,7 +89,6 @@ def start(doc):
                 source5.data = {'timeStart': tStart, 'startValue': value_start}
                 source6.data = {'timeEnd': tEnd, 'endValue': value_end}
 
-
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
                 else:
@@ -113,7 +112,7 @@ def start(doc):
             yrange = max(new_values) - min(new_values)
             p1.y_range.start = min(new_values) - yrange / 10
             p1.y_range.end = max(new_values) + yrange / 10
-            source.data = {'frames': new_frames, 'intensity': new_values}
+            source1.data = {'frames': new_frames, 'intensity': new_values}
 
             n = kernelSlider1.value
             val2smooth = np.array(new_values)
@@ -167,38 +166,22 @@ def start(doc):
             output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value],
                            'ext': [ext.labels[ext.active]]}
 
-        def callback(attr, old, new, source, frames, values):
-            global index
+        def slide_data(attr, old, new, point_index, source):
+            dict_keys = list(source.data)
+            source.patch({dict_keys[0]: [(point_index, frames[valueSlider.value])],
+                          dict_keys[1]: [(point_index, values[valueSlider.value])]})
 
-            def on_press(key):
-                global index
-                dict_keys = list(source.data)
-                if key == Key.left:
-                    try:
-                        index -= 1
-                        source.patch({dict_keys[0]: [(new[0], frames[index])],
-                                      dict_keys[1]: [(new[0], values[index])]})
-                    except ValueError:
-                        pass
-                elif key == Key.right:
-                    try:
-                        index += 1
-                        source.patch({dict_keys[0]: [(new[0], frames[index])],
-                                      dict_keys[1]: [(new[0], values[index])]})
-                    except ValueError:
-                        pass
-
-            def on_release(key):
-                if key == Key.esc:
-                    return False
-
+        def callback(attr, old, new, source):
             try:
-                data_x, data_y = tuple(source.data[i][s] for i in source.data.keys() for s in new)
+                # TODO: is there a way to prevent accessing protected member? .remove_on_change not possible with
+                #  partial
+                if 'value' in valueSlider._callbacks and len(valueSlider._callbacks['value']) == 1:
+                    del valueSlider._callbacks['value'][0]
+                data_x = source.data[list(source.data)[0]][new[0]]
                 index = frames.index(data_x)
-                print('index: {}'.format(index))
-                with Listener(on_press=on_press, on_release=on_release) as listener:
-                    listener.join()
-            except ValueError:
+                valueSlider.value = index
+                valueSlider.on_change('value', partial(slide_data, point_index=new[0], source=source))
+            except IndexError:
                 pass
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
@@ -210,14 +193,15 @@ def start(doc):
         text_input2.on_change('value', output_data)
         ext.on_change('active', output_data)
         fpsSpinner.on_change('value', output_data)
-        bt.on_click(partial(save, source, source4, source5, source6, settings, output, p1, p2, df))
+        bt.on_click(partial(save, source1, source4, source5, source6, settings, output, p1, p2, df))
         fileInp2.on_change('value', initialPlot)
-        source4.selected.on_change('indices', partial(callback, source=source4, frames=frames, values=values))
-        source5.selected.on_change('indices', partial(callback, source=source5, frames=frames, values=values))
-        source6.selected.on_change('indices', partial(callback, source=source6, frames=frames, values=values))
+        source4.selected.on_change('indices', partial(callback, source=source4))
+        source5.selected.on_change('indices', partial(callback, source=source5))
+        source6.selected.on_change('indices', partial(callback, source=source6))
 
-        layout2 = row(column(p1, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2, cutSlider3,
-                                             cutSlider4, fpsSpinner, row(text_input2, ext, bt), fileInp2))
+        layout2 = row(column(p1, valueSlider, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
+                                                          cutSlider3, cutSlider4, fpsSpinner, row(text_input2, ext, bt),
+                                                          fileInp2))
         doc.clear()
         doc.add_root(layout2)
 
