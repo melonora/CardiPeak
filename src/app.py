@@ -45,9 +45,12 @@ def start(doc):
         source1 = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
         source3 = ColumnDataSource(data=dict(frames=frames, dy=derivative_values))
-        source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val))
-        source5 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start))
-        source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end))
+        source4 = ColumnDataSource(data=dict(timeMaxima=time_max, maxima=max_val,
+                                             set=["auto" for i in range(len(max_val))]))
+        source5 = ColumnDataSource(data=dict(timeStart=tStart, startValue=value_start,
+                                             set=["auto" for i in range(len(value_start))]))
+        source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end,
+                                             set=["auto" for i in range(len(value_end))]))
         output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value],
                                             ext=[ext.labels[ext.active]]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
@@ -86,8 +89,10 @@ def start(doc):
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
                 tStart, value_start, tEnd, value_end = startEndPeak(new_frames, new_values, derivative_values,
                                                                  threshold)
-                source5.data = {'timeStart': tStart, 'startValue': value_start}
-                source6.data = {'timeEnd': tEnd, 'endValue': value_end}
+                source5.data = {'timeStart': tStart, 'startValue': value_start,
+                                'set': ["auto" for i in range(len(value_start))]}
+                source6.data = {'timeEnd': tEnd, 'endValue': value_end,
+                                'set': ["auto" for i in range(len(value_end))]}
 
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
@@ -127,8 +132,10 @@ def start(doc):
                                                                        threshold)
 
             source2.data = {'frames': new_frames, 'avgLine': val2smooth}
-            source5.data = {'timeStart': new_tStart, 'startValue': nvalue_start}
-            source6.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end}
+            source5.data = {'timeStart': new_tStart, 'startValue': nvalue_start,
+                            'set': ["auto" for i in range(len(nvalue_start))]}
+            source6.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end,
+                            'set': ["auto" for i in range(len(nvalue_end))]}
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
@@ -169,7 +176,8 @@ def start(doc):
         def slide_data(attr, old, new, point_index, source):
             dict_keys = list(source.data)
             source.patch({dict_keys[0]: [(point_index, frames[valueSlider.value])],
-                          dict_keys[1]: [(point_index, values[valueSlider.value])]})
+                          dict_keys[1]: [(point_index, values[valueSlider.value])],
+                          dict_keys[2]: [(point_index, 'manual')]})
 
         def callback(attr, old, new, source):
             try:
