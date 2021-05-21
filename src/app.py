@@ -51,10 +51,11 @@ def start(doc):
                                              set=["auto" for i in range(len(value_start))]))
         source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end,
                                              set=["auto" for i in range(len(value_end))]))
-        output = ColumnDataSource(data=dict(fps=[fpsSpinner.value], output_file=[text_input2.value],
+        output = ColumnDataSource(data=dict(output_file=[text_input2.value],
                                             ext=[ext.labels[ext.active]]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
-                                              SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value]))
+                                              SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value],
+                                              fps=[fpsSpinner.value]))
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
         p1.line('frames', 'intensity', line_alpha=.5, source=source1)
@@ -107,7 +108,8 @@ def start(doc):
                 rend.glyph.line_alpha = 0
 
             settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
-                             'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value]}
+                             'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
+                             'fps': [fpsSpinner.value]}
 
         def cuttingPoints(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -144,7 +146,8 @@ def start(doc):
 
             source3.data = {'frames': dy_frames, 'dy': new_dy}
             settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
-                             'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value]}
+                             'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
+                             'fps': [fpsSpinner.value]}
 
         def cuttingDerivative(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -170,7 +173,7 @@ def start(doc):
             source3.data = {'frames': dy_frames, 'dy': new_dy}
 
         def output_data(attr, old, new):
-            output.data = {'fps': [fpsSpinner.value], 'output_file': [text_input2.value],
+            output.data = {'output_file': [text_input2.value],
                            'ext': [ext.labels[ext.active]]}
 
         def slide_data(attr, old, new, point_index, source):
