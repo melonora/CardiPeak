@@ -29,7 +29,7 @@ def start(doc):
                     plot_height=450, tooltips=TOOLTIPS)
         p1.x_range = p2.x_range
 
-        kernelSlider1 = Slider(title='Apply smoothing filter x times', start=0, end=4, step=1, value=0)
+        kernelSlider1 = Slider(title='Apply smoothing filter x times', start=0, end=8, step=1, value=0)
         kernelSlider2 = Slider(title='Smoothing filter width', start=3, end=13, step=2, value=3)
         cutSlider = Slider(title='Cut first x datapoints', start=0, end=100, step=1, value=0)
         cutSlider2 = Slider(title='Cut last x datapoints', start=0, end=100, step=1, value=0)
