@@ -31,7 +31,11 @@ def obtainFrameValueLst(df: pd.DataFrame) -> Tuple[List[int], List[float]]:
 
 
 def getOutputDirs(root_dir):
-    return [i for i in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, i))]
+    if os.path.exists(root_dir):
+        return [i for i in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, i))]
+    else:
+        os.mkdir(root_dir)
+        return []
 
 
 def save(analyzed_data, max_data, start_data, end_data, settings, output_data, plot1, plot2, raw_data):
