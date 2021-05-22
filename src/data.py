@@ -30,6 +30,10 @@ def obtainFrameValueLst(df: pd.DataFrame) -> Tuple[List[int], List[float]]:
     return frames.tolist(), values.tolist()
 
 
+def getOutputDirs(root_dir):
+    return [i for i in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, i))]
+
+
 def save(analyzed_data, max_data, start_data, end_data, settings, output_data, plot1, plot2, raw_data):
     fps = settings.data['fps'][0]
     outputFile = output_data.data['output_file'][0]
