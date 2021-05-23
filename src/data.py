@@ -104,12 +104,6 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
                            'Peak_max_interval', 'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] +\
                           [i for i in settings.data]
 
-    outputDir = '../output'
-    try:
-        os.mkdir(outputDir)
-    except FileExistsError:
-        pass
-
     if outputFile == '':
         pd_complete.to_csv(outputDir + '/output.csv', index=False)
     elif extension == '.csv':
