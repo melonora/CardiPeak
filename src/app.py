@@ -1,7 +1,7 @@
 from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
-from bokeh.models import Slider, Span, Button, Spinner, TapTool
+from bokeh.models import Slider, Span, Button, Spinner, TapTool, Select
 from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup
 from io import BytesIO
 from bokeh.server.server import Server
@@ -19,6 +19,7 @@ def start(doc):
         derivative_values = derivative(values)
         time_max, max_val = getMax(frames, values, threshold)
         tStart, value_start, tEnd, value_end = startEndPeak(frames, values, derivative_values, threshold)
+        outputDirs = getOutputDirs('../output')
 
         TOOLTIPS = [("(x,y)", "($x, $y)")]
         tools1 = ['xwheel_zoom', 'xpan', 'reset']
@@ -37,10 +38,13 @@ def start(doc):
         cutSlider4 = Slider(title='Cut last x derivative', start=0, end=30, step=1, value=0)
         valueSlider = Slider(title='Selected datapoint index', start=0, end=len(frames), value=0, margin=(0, 30, 0, 40))
         fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
-        text_input2 = TextInput(value_input="", title="Enter name output file without file extension")
+        text_input = TextInput(value_input="", title="Enter name output file without file extension")
+        text_input2 = TextInput(value_input="", title="Enter name of new output directory",
+                                placeholder="please overwrite")
         ext = RadioButtonGroup(labels=['.csv', '.xlsx'], orientation='vertical', height_policy='min', active=0)
         bt = Button(label='Click to save', height_policy='max')
         fileInp2 = FileInput(accept=".csv")
+        selectDir = Select(title='output directory', options=['new']+outputDirs, width_policy='min')
 
         source1 = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
@@ -51,7 +55,7 @@ def start(doc):
                                              set=["auto" for i in range(len(value_start))]))
         source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end,
                                              set=["auto" for i in range(len(value_end))]))
-        output = ColumnDataSource(data=dict(output_file=[text_input2.value],
+        output = ColumnDataSource(data=dict(output_dir=[selectDir.value], output_file=[text_input2.value],
                                             ext=[ext.labels[ext.active]]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
                                               SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value],
@@ -176,8 +180,14 @@ def start(doc):
             source3.data = {'frames': dy_frames, 'dy': new_dy}
 
         def output_data(attr, old, new):
-            output.data = {'output_file': [text_input2.value],
-                           'ext': [ext.labels[ext.active]]}
+            if selectDir.value == 'new':
+                text_input2.visible = True
+                output.data = {'output_dir': [text_input2.value], 'output_file': [text_input.value],
+                               'ext': [ext.labels[ext.active]]}
+            else:
+                text_input2.visible = False
+                output.data = {'output_dir': [selectDir.value], 'output_file': [text_input.value],
+                               'ext': [ext.labels[ext.active]]}
 
         def slide_data(attr, old, new, point_index, source):
             dict_keys = list(source.data)
@@ -204,7 +214,9 @@ def start(doc):
         cutSlider2.on_change('value', partial(cuttingPoints, frames=frames, values=values))
         cutSlider3.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
         cutSlider4.on_change('value', partial(cuttingDerivative, frames=frames, values=values))
+        text_input.on_change('value', output_data)
         text_input2.on_change('value', output_data)
+        selectDir.on_change('value', output_data)
         ext.on_change('active', output_data)
         fpsSpinner.on_change('value', output_data)
         bt.on_click(partial(save, source1, source4, source5, source6, settings, output, p1, p2, df))
@@ -214,7 +226,8 @@ def start(doc):
         source6.selected.on_change('indices', partial(callback, source=source6))
 
         layout2 = row(column(p1, valueSlider, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
-                                                          cutSlider3, cutSlider4, fpsSpinner, row(text_input2, ext, bt),
+                                                          cutSlider3, cutSlider4, fpsSpinner,
+                                                          row(text_input, ext, bt), row(selectDir, text_input2),
                                                           fileInp2))
         doc.clear()
         doc.add_root(layout2)
