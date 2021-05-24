@@ -49,7 +49,8 @@ def derivative(values: List[float]) -> List[float]:
     return dy
 
 
-def getMax(frames: List[int], values: List[float], threshold: int) -> Tuple[List[int], List[float]]:
+def getMax(frames: List[int], values: List[float], avgValues: List[float], threshold: int)\
+        -> Tuple[List[int], List[float]]:
     """ Function to retrieve the maximum value of a sequence of values above a given threshold and the specific frame at
     which this maximum occurs.
 
@@ -59,6 +60,8 @@ def getMax(frames: List[int], values: List[float], threshold: int) -> Tuple[List
         List of integers in which each integer corresponds to the index of a frame.
     values : List[float]
         List of floats in which each float corresponds to a calcium intensity of a given frame.
+    avgValues : List[float]
+        List of floats resulting from an average filter applied to the values list.
     threshold : float
         Threshold equal to a float value used to determine which parts of a list of float values are above a given
         threshold.
@@ -84,8 +87,9 @@ def getMax(frames: List[int], values: List[float], threshold: int) -> Tuple[List
             if values[i] <= threshold:
                 minIndex, maxIndex = indexAbove[0], indexAbove[-1]
                 if len(values[minIndex:maxIndex]) >= 20:
-                    timeMax.append(frames[values[minIndex:maxIndex].index(max(values[minIndex:maxIndex])) + minIndex])
-                    maxVals.append(max(values[minIndex:maxIndex]))
+                    index = avgValues[minIndex:maxIndex].index(max(avgValues[minIndex:maxIndex])) + minIndex
+                    timeMax.append(frames[index])
+                    maxVals.append(values[index])
 
                 above = False
             else:

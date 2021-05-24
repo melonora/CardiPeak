@@ -17,7 +17,7 @@ def start(doc):
         frames, values = obtainFrameValueLst(df)
         threshold = (min(values[100:]) + max(values[100:])) / 2
         derivative_values = derivative(values)
-        time_max, max_val = getMax(frames, values, threshold)
+        time_max, max_val = getMax(frames, values, values, threshold)
         tStart, value_start, tEnd, value_end = startEndPeak(frames, values, derivative_values, threshold)
         outputDirs = getOutputDirs('../output')
 
@@ -91,7 +91,7 @@ def start(doc):
                     val2smooth = averageFilter(val2smooth, kernelSlider2.value)
                     n -= 1
                 derivative_values = derivative(val2smooth)
-                time_max, max_val = getMax(new_frames, val2smooth.tolist(), threshold)
+                time_max, max_val = getMax(new_frames, new_values, val2smooth.tolist(), threshold)
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
                 source4.data = {'timeMaxima': time_max, 'maxima': max_val,
                                 'set': ["auto" for i in range(len(max_val))]}
