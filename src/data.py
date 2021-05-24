@@ -40,6 +40,7 @@ def getOutputDirs(root_dir):
 
 def save(analyzed_data, max_data, start_data, end_data, settings, output_data, plot1, plot2, raw_data):
     fps = settings.data['fps'][0]
+    subDir = output_data.data['output_dir'][0]
     outputFile = output_data.data['output_file'][0]
     extension = output_data.data['ext'][0]
     lsData = list(zip(analyzed_data.data['frames'], analyzed_data.data['intensity']))
@@ -50,7 +51,7 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
     lsEnd = frameTime(list(zip(end_data.data['timeEnd'], end_data.data['endValue'],
                                ['end'] * len(end_data.data['endValue']), end_data.data['set'])), fps)
     lsPoints = sorted(lsMax + lsStart + lsEnd)
-    print(lsPoints)
+
     startIndex = -1
     point = "end"
     for i in range(len(lsPoints)):
@@ -104,25 +105,29 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
                            'Peak_max_interval', 'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] +\
                           [i for i in settings.data]
 
-    if outputFile == '':
-        pd_complete.to_csv(outputDir + '/output.csv', index=False)
-    elif extension == '.csv':
-        pd_complete.to_csv(outputDir + '/' + outputFile + extension, index=False)
-    elif extension == '.xlsx':
-        export_png(plot1, filename=outputDir + '/image.png')
-        export_png(plot2, filename=outputDir + '/image2.png')
-        with pd.ExcelWriter(outputDir + '/' + outputFile + extension) as writer:
-            pd_complete.to_excel(writer, index=False, sheet_name='Analysis_results')
-            raw_data.to_excel(writer, index=False, sheet_name='Raw_data')
+    outputDir = '../output'
+    if not os.path.exists(os.path.join(outputDir, subDir)):
+        os.makedirs(os.path.join(outputDir, subDir))
+    if subDir != "please overwrite":
+        if outputFile == '':
+            pd_complete.to_csv(os.path.join(outputDir, subDir, 'output.csv'), index=False)
+        elif extension == '.csv':
+            pd_complete.to_csv(os.path.join(outputDir, subDir, outputFile + extension), index=False)
+        elif extension == '.xlsx':
+            export_png(plot1, filename=os.path.join(outputDir, subDir, 'image.png'))
+            export_png(plot2, filename=os.path.join(outputDir, subDir, 'image2.png'))
+            with pd.ExcelWriter(os.path.join(outputDir, subDir, outputFile + extension)) as writer:
+                pd_complete.to_excel(writer, index=False, sheet_name='Analysis_results')
+                raw_data.to_excel(writer, index=False, sheet_name='Raw_data')
 
-        workbook = openpyxl.load_workbook(outputDir + '/' + outputFile + extension)
-        ws1 = workbook.create_sheet("Plots")
-        img = openpyxl.drawing.image.Image(outputDir + '/image.png')
-        img.anchor = 'B2'
-        img2 = openpyxl.drawing.image.Image(outputDir + '/image2.png')
-        img2.anchor = 'B27'
-        ws1.add_image(img)
-        ws1.add_image(img2)
-        workbook.save(outputDir + '/' + outputFile + extension)
-        os.remove(outputDir + '/image.png')
-        os.remove(outputDir + '/image2.png')
+            workbook = openpyxl.load_workbook(os.path.join(outputDir, subDir, outputFile + extension))
+            ws1 = workbook.create_sheet("Plots")
+            img = openpyxl.drawing.image.Image(os.path.join(outputDir, subDir, 'image.png'))
+            img.anchor = 'B2'
+            img2 = openpyxl.drawing.image.Image(os.path.join(outputDir, subDir, 'image2.png'))
+            img2.anchor = 'B27'
+            ws1.add_image(img)
+            ws1.add_image(img2)
+            workbook.save(os.path.join(outputDir, subDir, outputFile + extension))
+            os.remove(os.path.join(outputDir, subDir, 'image.png'))
+            os.remove(os.path.join(outputDir, subDir, 'image2.png'))
