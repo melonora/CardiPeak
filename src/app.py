@@ -44,7 +44,7 @@ def start(doc):
         ext = RadioButtonGroup(labels=['.csv', '.xlsx'], orientation='vertical', height_policy='min', active=0)
         bt = Button(label='Click to save', height_policy='max')
         fileInp2 = FileInput(accept=".csv")
-        selectDir = Select(title='output directory', options=['new']+outputDirs, width_policy='min')
+        selectDir = Select(title='output directory', value='new', options=['new']+outputDirs, width_policy='min')
 
         source1 = ColumnDataSource(data=dict(frames=frames, intensity=values))
         source2 = ColumnDataSource(data=dict(frames=frames, avgLine=values))
