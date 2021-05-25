@@ -22,9 +22,9 @@ def averageFilter(y: List[float], filterWidth: int) -> np.array:
     """
     avgFilter = np.ones(filterWidth) / filterWidth
     averageY = np.array(y)
-    halfMinusOne = int(avgFilter.shape[0] / 2)
-    for i in range(halfMinusOne, averageY.shape[0]-halfMinusOne):
-        averageY[i] = (y[i-halfMinusOne:i+halfMinusOne+1] * avgFilter).sum()
+    halfFloored = int(avgFilter.shape[0] / 2)
+    for i in range(halfFloored, averageY.shape[0]-halfFloored):
+        averageY[i] = (y[i-halfFloored:i+halfFloored+1] * avgFilter).sum()
     return averageY
 
 
