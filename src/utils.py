@@ -52,7 +52,10 @@ def derivative(values: List[float]) -> List[float]:
 def getMax(frames: List[int], values: List[float], avgValues: List[float], threshold: int)\
         -> Tuple[List[int], List[float]]:
     """ Function to retrieve the maximum value of a sequence of values above a given threshold and the specific frame at
-    which this maximum occurs.
+    which this maximum occurs. Maximum values are obtained by iterating over a list of values, determining the start and
+    end index of the sequence about a given threshold and then determining the index of the maximum value in
+    AvgValues[start: end]. The start index is added to obtain the index in the full list. The frame and real value from
+    values is obtained with this index.
 
     Parameters
     ----------
@@ -68,9 +71,9 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
 
     Returns
     -------
-    timeMax: List[int]
+    frameMaxValues: List[int]
         List containing the indexes of frames with the maximum calcium intensity value of peaks.
-    maxVals: List[float]
+    maxValues: List[float]
         List of float values corresponding to each maximum intensity value of each calcium intensity peak in the values
         list.
     """
@@ -78,8 +81,8 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
         above = True
     else:
         above = False
-    timeMax = []
-    maxVals = []
+    frameMaxValues = []
+    maxValues = []
     indexAbove = []
 
     for i in range(len(values)):
@@ -88,8 +91,8 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
                 minIndex, maxIndex = indexAbove[0], indexAbove[-1]
                 if len(values[minIndex:maxIndex]) >= 20:
                     index = avgValues[minIndex:maxIndex].index(max(avgValues[minIndex:maxIndex])) + minIndex
-                    timeMax.append(frames[index])
-                    maxVals.append(values[index])
+                    frameMaxValues.append(frames[index])
+                    maxValues.append(values[index])
 
                 above = False
             else:
@@ -100,7 +103,7 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
             else:
                 indexAbove = [i]
                 above = True
-    return timeMax, maxVals
+    return frameMaxValues, maxValues
 
 
 def addTimeValue(timePointLs, valuePointLs, timeLs, valueLs, index):
