@@ -103,6 +103,16 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
     return timeMax, maxVals
 
 
+def addTimeValue(timePointLs, valuePointLs, timeLs, valueLs, index):
+    if valueLs[index] < valueLs[index + 1]:
+        timePointLs.append(timeLs[index])
+        valuePointLs.append(valueLs[index])
+    else:
+        timePointLs.append(timeLs[index + 1])
+        valuePointLs.append(valueLs[index + 1])
+    return timePointLs, valuePointLs
+
+
 def startEndPeak(frames: List[int], values: List[float], derivative: List[float],
                  threshold: int) -> Tuple[List[int], List[float], List[int], List[float]]:
     """ Function to obtain the indexes of frames and the corresponding intensity values of the start and end of calcium
@@ -154,12 +164,8 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
                         if derivative[t] > 0:
                             pass
                         else:
-                            if values[t] < values[t+1]:
-                                timeStartPeaks.append(frames[t])
-                                valueStartPeaks.append(values[t])
-                            else:
-                                timeStartPeaks.append(frames[t+1])
-                                valueStartPeaks.append(values[t+1])
+                            timeStartPeaks, valueStartPeaks = addTimeValue(timeStartPeaks, valueStartPeaks, frames,
+                                                                           values, t)
                             break
                 below = False
         else:
@@ -174,12 +180,8 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
                         if derivative[t] < 0:
                             pass
                         else:
-                            if values[t] < values[t+1]:
-                                timeEndPeaks.append(frames[t])
-                                valueEndPeaks.append(values[t])
-                            else:
-                                timeEndPeaks.append(frames[t+1])
-                                valueEndPeaks.append(values[t+1])
+                            timeStartPeaks, valueStartPeaks = addTimeValue(timeStartPeaks, valueStartPeaks, frames,
+                                                                           values, t)
                             break
                 below = True
     return timeStartPeaks, valueStartPeaks, timeEndPeaks, valueEndPeaks
