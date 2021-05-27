@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 
 def averageFilter(y: List[float], filterWidth: int) -> np.array:
@@ -106,14 +106,38 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
     return frameMaxValues, maxValues
 
 
-def addTimeValue(timePointLs, valuePointLs, timeLs, valueLs, index):
+def addTimeValue(framePointLs: List[Optional[int]], valuePointLs: List[Optional[float]], frameLs: List[int],
+                 valueLs: List[float], index: int):
+    """ Function appending the frame and the corresponding intensity value of that frame to the corresponding lists
+    given an index.
+
+    Parameters
+    ----------
+    framePointLs: List[Optional[int]]
+        List containing integers corresponding to the frames of either starts, max or end of the peaks.
+    valuePointLs: List[Optional[float]]
+        List containing float elements corresponding to the values at starts, max or end of the peaks.
+    frameLs: List[int]
+        List containing integers corresponding to the frame numbers.
+    valueLs: List[float]
+        List with float elements corresponding to the calcium intensities.
+    index: int
+        Integer indicating the index of either the start, max or end of a peak.
+
+    Returns
+    -------
+    framePointLs: List[Optional[int]]
+        List containing integers corresponding to the frames of either starts, max or end of the peaks.
+    valuePointLs: List[Optional[float]]
+        List containing float elements corresponding to the values at starts, max or end of the peaks.
+    """
     if valueLs[index] < valueLs[index + 1]:
-        timePointLs.append(timeLs[index])
+        framePointLs.append(frameLs[index])
         valuePointLs.append(valueLs[index])
     else:
-        timePointLs.append(timeLs[index + 1])
+        framePointLs.append(frameLs[index + 1])
         valuePointLs.append(valueLs[index + 1])
-    return timePointLs, valuePointLs
+    return framePointLs, valuePointLs
 
 
 def startEndPeak(frames: List[int], values: List[float], derivative: List[float],
