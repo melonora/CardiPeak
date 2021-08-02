@@ -30,7 +30,21 @@ def obtainFrameValueLst(df: pd.DataFrame) -> Tuple[List[int], List[float]]:
     return frames.tolist(), values.tolist()
 
 
-def getOutputDirs(root_dir):
+def getOutputDirs(root_dir: str) -> List:
+    """
+    Function to check if output directory exists and to check the directories within an output directory. If output
+    directory does not exists, one is created.
+
+    Parameters
+    ----------
+    root_dir : str
+        String indicating the path of the output directory
+
+    Returns
+    -------
+    List
+        List containing the directory names in root_dir
+    """
     if os.path.exists(root_dir):
         return [i for i in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, i))]
     else:
