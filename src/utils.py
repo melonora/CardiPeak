@@ -207,7 +207,7 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
                         if derivative[t] < 0:
                             pass
                         else:
-                            timeStartPeaks, valueStartPeaks = addTimeValue(timeStartPeaks, valueStartPeaks, frames,
+                            timeEndPeaks, valueEndPeaks = addTimeValue(timeEndPeaks, valueEndPeaks, frames,
                                                                            values, t)
                             break
                 below = True
