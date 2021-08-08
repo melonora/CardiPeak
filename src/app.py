@@ -229,8 +229,12 @@ def start(doc):
                                                           cutSlider3, cutSlider4, fpsSpinner,
                                                           row(text_input, ext, bt), row(selectDir, text_input2),
                                                           fileInp2))
+        layout3 = row(column(p1, valueSlider), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
+                                                      fpsSpinner, row(text_input, ext, bt), row(selectDir, text_input2),
+                                                      fileInp2))
         intervalPanel = Panel(child=layout2, title="Interval")
-        tabs = Tabs(tabs=[intervalPanel, intervalPanel])
+        noIntervalPanel = Panel(child=layout3, title="No interval")
+        tabs = Tabs(tabs=[intervalPanel, noIntervalPanel])
         doc.clear()
         doc.add_root(tabs)
 
