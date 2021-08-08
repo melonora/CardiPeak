@@ -2,7 +2,7 @@ from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
 from bokeh.models import Slider, Span, Button, Spinner, TapTool, Select
-from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup
+from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup, Tabs, Panel
 from io import BytesIO
 from bokeh.server.server import Server
 from base64 import b64decode
@@ -229,8 +229,10 @@ def start(doc):
                                                           cutSlider3, cutSlider4, fpsSpinner,
                                                           row(text_input, ext, bt), row(selectDir, text_input2),
                                                           fileInp2))
+        intervalPanel = Panel(child=layout2, title="Interval")
+        tabs = Tabs(tabs=[intervalPanel, intervalPanel])
         doc.clear()
-        doc.add_root(layout2)
+        doc.add_root(tabs)
 
     fileInp = FileInput(accept=".csv")
     fileInp.on_change('value', initialPlot)
