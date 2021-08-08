@@ -28,6 +28,8 @@ def start(doc):
                     plot_height=450, tooltips=TOOLTIPS)
         p2 = figure(title='Derivative over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
                     plot_height=450, tooltips=TOOLTIPS)
+        p3 = figure(title='Intensity over time', tools=tools1, active_scroll='xwheel_zoom', plot_width=1000,
+                    plot_height=450, tooltips=TOOLTIPS)
         p1.x_range = p2.x_range
 
         kernelSlider1 = Slider(title='Apply smoothing filter x times', start=0, end=8, step=1, value=0)
@@ -64,13 +66,18 @@ def start(doc):
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
         p1.line('frames', 'intensity', line_alpha=.5, source=source1)
         p2.line('frames', 'dy', line_color='blue', source=source3)
+        p3.line('frames', 'intensity', line_alpha=.5, source=source1)
         max_rend = p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
+        max_rend2 = p3.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
         start_rend = p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
         end_rend = p1.circle('timeEnd', 'endValue', source=source6, fill_color='purple', size=7)
         p1.renderers.extend([hline])
+        p3.renderers.extend([hline])
         p1.add_tools(TapTool(renderers=[max_rend, start_rend, end_rend]))
+        p3.add_tools(TapTool(renderers=[max_rend2]))
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
+        rend2 = p3.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
 
         def updateAvg(attr, old, new, frames, values):
             if cutSlider.value != 0 or cutSlider2.value != 0:
@@ -111,8 +118,10 @@ def start(doc):
                 source3.data = {'frames': dy_frames, 'dy': new_dy}
 
                 rend.glyph.line_alpha = 1
+                rend2.glyph.line_alpha = 1
             else:
                 rend.glyph.line_alpha = 0
+                rend2.glyph.line_alpha = 0
 
             settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
                              'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
@@ -229,7 +238,7 @@ def start(doc):
                                                           cutSlider3, cutSlider4, fpsSpinner,
                                                           row(text_input, ext, bt), row(selectDir, text_input2),
                                                           fileInp2))
-        layout3 = row(column(p1, valueSlider), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
+        layout3 = row(column(p3, valueSlider), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
                                                       fpsSpinner, row(text_input, ext, bt), row(selectDir, text_input2),
                                                       fileInp2))
         intervalPanel = Panel(child=layout2, title="Interval")
