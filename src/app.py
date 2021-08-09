@@ -45,6 +45,7 @@ def start(doc):
                                 placeholder="please overwrite")
         ext = RadioButtonGroup(labels=['.csv', '.xlsx'], orientation='vertical', height_policy='min', active=0)
         bt = Button(label='Click to save', height_policy='max')
+        bt2 = Button(label='Click to save', height_policy='max')
         fileInp2 = FileInput(accept=".csv")
         selectDir = Select(title='output directory', value='new', options=['new']+outputDirs, width_policy='min')
 
@@ -239,6 +240,7 @@ def start(doc):
         ext.on_change('active', output_data)
         fpsSpinner.on_change('value', output_data)
         bt.on_click(partial(save, source1, source4, source5, source6, settings, output, p1, p2, df))
+        bt2.on_click(partial(noIntervalSave, source1, source4, source7, settings, output, p3, df))
         fileInp2.on_change('value', initialPlot)
         source4.selected.on_change('indices', partial(callback, source=source4))
         source5.selected.on_change('indices', partial(callback, source=source5))
@@ -249,8 +251,9 @@ def start(doc):
                                                           row(text_input, ext, bt), row(selectDir, text_input2),
                                                           fileInp2))
         layout3 = row(column(p3, valueSlider), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
-                                                      fpsSpinner, row(text_input, ext, bt), row(selectDir, text_input2),
-                                                      fileInp2))
+                                                      fpsSpinner, row(text_input, ext, bt2), row(selectDir,
+                                                                                                 text_input2), fileInp2)
+                      )
         intervalPanel = Panel(child=layout2, title="Interval")
         noIntervalPanel = Panel(child=layout3, title="No interval")
         tabs = Tabs(tabs=[intervalPanel, noIntervalPanel])
