@@ -84,6 +84,9 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
     frameMaxValues = []
     maxValues = []
     indexAbove = []
+    frameMinValues = []
+    minValues = []
+    indexBelow = []
 
     for i in range(len(values)):
         if above:
@@ -93,17 +96,22 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
                     index = avgValues[minIndex:maxIndex].index(max(avgValues[minIndex:maxIndex])) + minIndex
                     frameMaxValues.append(frames[index])
                     maxValues.append(values[index])
-
                 above = False
+                indexBelow = [i]
             else:
                 indexAbove.append(i)
         else:
             if values[i] < threshold:
-                pass
+                indexBelow.append(i)
             else:
+                minIndex, maxIndex = indexBelow[0], indexBelow[-1]
+                if len(values[minIndex:maxIndex]) >= 20:
+                    index = avgValues[minIndex:maxIndex].index(min(avgValues[minIndex:maxIndex])) + minIndex
+                    frameMinValues.append(frames[index])
+                    minValues.append(values[index])
                 indexAbove = [i]
                 above = True
-    return frameMaxValues, maxValues
+    return frameMaxValues, maxValues, frameMinValues, minValues
 
 
 def addTimeValue(framePointLs: List[Optional[int]], valuePointLs: List[Optional[float]], frameLs: List[int],

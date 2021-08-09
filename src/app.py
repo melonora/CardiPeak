@@ -17,7 +17,7 @@ def start(doc):
         frames, values = obtainFrameValueLst(df)
         threshold = (min(values[100:]) + max(values[100:])) / 2
         derivative_values = derivative(values)
-        time_max, max_val = getMax(frames, values, values, threshold)
+        time_max, max_val, time_min, min_val = getMax(frames, values, values, threshold)
         tStart, value_start, tEnd, value_end = startEndPeak(frames, values, derivative_values, threshold)
         outputDirs = getOutputDirs('../output')
 
@@ -57,6 +57,8 @@ def start(doc):
                                              set=["auto" for i in range(len(value_start))]))
         source6 = ColumnDataSource(data=dict(timeEnd=tEnd, endValue=value_end,
                                              set=["auto" for i in range(len(value_end))]))
+        source7 = ColumnDataSource(data=dict(timeMinima=time_min, minima=min_val,
+                                             set=["auto" for i in range(len(min_val))]))
         output = ColumnDataSource(data=dict(output_dir=[selectDir.value], output_file=[text_input2.value],
                                             ext=[ext.labels[ext.active]]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
@@ -69,12 +71,13 @@ def start(doc):
         p3.line('frames', 'intensity', line_alpha=.5, source=source1)
         max_rend = p1.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
         max_rend2 = p3.circle('timeMaxima', 'maxima', source=source4, fill_color='red', size=7)
+        min_rend = p3.circle('timeMinima', 'minima', source=source7, fill_color='green', size=7)
         start_rend = p1.circle('timeStart', 'startValue', source=source5, fill_color='green', size=7)
         end_rend = p1.circle('timeEnd', 'endValue', source=source6, fill_color='purple', size=7)
         p1.renderers.extend([hline])
         p3.renderers.extend([hline])
         p1.add_tools(TapTool(renderers=[max_rend, start_rend, end_rend]))
-        p3.add_tools(TapTool(renderers=[max_rend2]))
+        p3.add_tools(TapTool(renderers=[max_rend2, min_rend]))
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
         rend2 = p3.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
@@ -98,7 +101,7 @@ def start(doc):
                     val2smooth = averageFilter(val2smooth, kernelSlider2.value)
                     n -= 1
                 derivative_values = derivative(val2smooth)
-                time_max, max_val = getMax(new_frames, new_values, val2smooth.tolist(), threshold)
+                time_max, max_val, time_min, min_val = getMax(new_frames, new_values, val2smooth.tolist(), threshold)
                 source2.data = {'frames': new_frames, 'avgLine': val2smooth}
                 source4.data = {'timeMaxima': time_max, 'maxima': max_val,
                                 'set': ["auto" for i in range(len(max_val))]}
@@ -108,6 +111,8 @@ def start(doc):
                                 'set': ["auto" for i in range(len(value_start))]}
                 source6.data = {'timeEnd': tEnd, 'endValue': value_end,
                                 'set': ["auto" for i in range(len(value_end))]}
+                source7.data = {'timeMinima': time_min, 'minima': min_val,
+                                'set': ["auto" for i in range(len(min_val))]}
 
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
@@ -148,12 +153,17 @@ def start(doc):
                 derivative_values = derivative(new_values)
             new_tStart, nvalue_start, new_tEnd, nvalue_end = startEndPeak(new_frames, new_values, derivative_values,
                                                                        threshold)
+            time_max, max_val, time_min, min_val = getMax(new_frames, new_values, val2smooth.tolist(), threshold)
 
             source2.data = {'frames': new_frames, 'avgLine': val2smooth}
+            source4.data = {'timeMaxima': time_max, 'maxima': max_val,
+                            'set': ["auto" for i in range(len(max_val))]}
             source5.data = {'timeStart': new_tStart, 'startValue': nvalue_start,
                             'set': ["auto" for i in range(len(nvalue_start))]}
             source6.data = {'timeEnd': new_tEnd, 'endValue': nvalue_end,
                             'set': ["auto" for i in range(len(nvalue_end))]}
+            source7.data = {'timeMinima': time_min, 'minima': min_val,
+                            'set': ["auto" for i in range(len(min_val))]}
 
             if cutSlider4.value > 0: maxInd = -cutSlider4.value -1
             else: maxInd = -1
