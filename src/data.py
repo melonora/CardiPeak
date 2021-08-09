@@ -1,7 +1,7 @@
 import pandas as pd
 from bokeh.io import export_png
 from typing import Tuple, List
-from utils import frameTime, getAmplitudes
+from utils import frameTime, getAmplitudes, getAmplitudes2
 import os
 import openpyxl
 
@@ -30,12 +30,83 @@ def obtainFrameValueLst(df: pd.DataFrame) -> Tuple[List[int], List[float]]:
     return frames.tolist(), values.tolist()
 
 
-def getOutputDirs(root_dir):
+def getOutputDirs(root_dir: str) -> List:
+    """
+    Function to check if output directory exists and to check the directories within an output directory. If output
+    directory does not exists, one is created.
+
+    Parameters
+    ----------
+    root_dir : str
+        String indicating the path of the output directory
+
+    Returns
+    -------
+    List
+        List containing the directory names in root_dir
+    """
     if os.path.exists(root_dir):
         return [i for i in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, i))]
     else:
         os.mkdir(root_dir)
         return []
+
+def noIntervalSave(analyzed_data, max_data, min_data, settings, output_data, plot3, raw_data):
+    fps = settings.data['fps'][0]
+    subDir = output_data.data['output_dir'][0]
+    outputFile = output_data.data['output_file'][0]
+    extension = output_data.data['ext'][0]
+    lsData = list(zip(analyzed_data.data['frames'], analyzed_data.data['intensity']))
+    lsMax = frameTime(list(zip(max_data.data['timeMaxima'], max_data.data['maxima'],
+                               ['max'] * len(max_data.data['maxima']), max_data.data['set'])), fps)
+    lsMin = frameTime(list(zip(min_data.data['timeMinima'], min_data.data['minima'],
+                               ['min'] * len(min_data.data['minima']), min_data.data['set'])), fps)
+    lsPoints = sorted(lsMax + lsMin)
+    lsData = frameTime(lsData, fps)
+    print(lsData)
+
+    peakTime = [lsPoints[i + 2][-1] - lsPoints[i][-1] for i in range(len(lsPoints) - 2) if lsPoints[i][2] == 'min']
+    peakMaxInterval = [lsMax[i + 1][-1] - lsMax[i][-1] for i in range(len(lsMax) - 1)]
+    startMaxTime = [lsPoints[i + 1][-1] - lsPoints[i][-1] for i in range(len(lsPoints) - 1) if
+                    lsPoints[i][2] == 'min']
+    maxEndTime = [lsPoints[i + 1][-1] - lsPoints[i][-1] for i in range(len(lsPoints) - 1) if lsPoints[i][2] == 'max']
+    amplitudes = getAmplitudes2(lsPoints)
+
+    pdData = pd.DataFrame({'Frame_index': [i[0] for i in lsData], 'Time_(s)': [i[2] for i in lsData],
+                           'Intensity': [i[1] for i in lsData]})
+
+    pdPeakMaxInterval = pd.DataFrame({'Peak_max_interval': peakMaxInterval})
+    pdStartMaxT = pd.DataFrame({'start_max(s)': startMaxTime})
+    pdMaxEndT = pd.DataFrame({'max_end(s)': maxEndTime})
+    pdPeakTime = pd.DataFrame({'Peak_time(s)': peakTime})
+    pdAmplitudes = pd.DataFrame({'Peak_amplitude': amplitudes})
+    pdSettings = pd.DataFrame(settings.data)
+    pd_complete = pd.concat([pdData, pdPeakMaxInterval, pdStartMaxT, pdMaxEndT, pdPeakTime, pdAmplitudes,
+                             pdSettings], ignore_index=True, axis=1)
+    pd_complete.columns = ['Frame_index', 'Time_(s)', 'Intensity',
+                           'Peak_max_interval', 'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] + \
+                          [i for i in settings.data]
+
+    outputDir = '../output'
+    if not os.path.exists(os.path.join(outputDir, subDir)):
+        os.makedirs(os.path.join(outputDir, subDir))
+    if subDir != "please overwrite":
+        if outputFile == '':
+            pd_complete.to_csv(os.path.join(outputDir, subDir, 'output.csv'), index=False)
+        elif extension == '.csv':
+            pd_complete.to_csv(os.path.join(outputDir, subDir, outputFile + extension), index=False)
+        elif extension == '.xlsx':
+            export_png(plot3, filename=os.path.join(outputDir, subDir, 'image.png'))
+            with pd.ExcelWriter(os.path.join(outputDir, subDir, outputFile + extension)) as writer:
+                pd_complete.to_excel(writer, index=False, sheet_name='Analysis_results')
+                raw_data.to_excel(writer, index=False, sheet_name='Raw_data')
+            workbook = openpyxl.load_workbook(os.path.join(outputDir, subDir, outputFile + extension))
+            ws1 = workbook.create_sheet("Plots")
+            img = openpyxl.drawing.image.Image(os.path.join(outputDir, subDir, 'image.png'))
+            img.anchor = 'B2'
+            ws1.add_image(img)
+            workbook.save(os.path.join(outputDir, subDir, outputFile + extension))
+            os.remove(os.path.join(outputDir, subDir, 'image.png'))
 
 
 def save(analyzed_data, max_data, start_data, end_data, settings, output_data, plot1, plot2, raw_data):

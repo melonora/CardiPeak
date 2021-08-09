@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 
 def averageFilter(y: List[float], filterWidth: int) -> np.array:
@@ -22,9 +22,9 @@ def averageFilter(y: List[float], filterWidth: int) -> np.array:
     """
     avgFilter = np.ones(filterWidth) / filterWidth
     averageY = np.array(y)
-    halfMinusOne = int(avgFilter.shape[0] / 2)
-    for i in range(halfMinusOne, averageY.shape[0]-halfMinusOne):
-        averageY[i] = (y[i-halfMinusOne:i+halfMinusOne+1] * avgFilter).sum()
+    halfFloored = int(avgFilter.shape[0] / 2)
+    for i in range(halfFloored, averageY.shape[0]-halfFloored):
+        averageY[i] = (y[i-halfFloored:i+halfFloored+1] * avgFilter).sum()
     return averageY
 
 
@@ -52,7 +52,10 @@ def derivative(values: List[float]) -> List[float]:
 def getMax(frames: List[int], values: List[float], avgValues: List[float], threshold: int)\
         -> Tuple[List[int], List[float]]:
     """ Function to retrieve the maximum value of a sequence of values above a given threshold and the specific frame at
-    which this maximum occurs.
+    which this maximum occurs. Maximum values are obtained by iterating over a list of values, determining the start and
+    end index of the sequence about a given threshold and then determining the index of the maximum value in
+    AvgValues[start: end]. The start index is added to obtain the index in the full list. The frame and real value from
+    values is obtained with this index.
 
     Parameters
     ----------
@@ -68,9 +71,9 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
 
     Returns
     -------
-    timeMax: List[int]
+    frameMaxValues: List[int]
         List containing the indexes of frames with the maximum calcium intensity value of peaks.
-    maxVals: List[float]
+    maxValues: List[float]
         List of float values corresponding to each maximum intensity value of each calcium intensity peak in the values
         list.
     """
@@ -78,9 +81,12 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
         above = True
     else:
         above = False
-    timeMax = []
-    maxVals = []
+    frameMaxValues = []
+    maxValues = []
     indexAbove = []
+    frameMinValues = []
+    minValues = []
+    indexBelow = []
 
     for i in range(len(values)):
         if above:
@@ -88,19 +94,58 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
                 minIndex, maxIndex = indexAbove[0], indexAbove[-1]
                 if len(values[minIndex:maxIndex]) >= 20:
                     index = avgValues[minIndex:maxIndex].index(max(avgValues[minIndex:maxIndex])) + minIndex
-                    timeMax.append(frames[index])
-                    maxVals.append(values[index])
-
+                    frameMaxValues.append(frames[index])
+                    maxValues.append(values[index])
                 above = False
+                indexBelow = [i]
             else:
                 indexAbove.append(i)
         else:
             if values[i] < threshold:
-                pass
+                indexBelow.append(i)
             else:
+                minIndex, maxIndex = indexBelow[0], indexBelow[-1]
+                if len(values[minIndex:maxIndex]) >= 20:
+                    index = avgValues[minIndex:maxIndex].index(min(avgValues[minIndex:maxIndex])) + minIndex
+                    frameMinValues.append(frames[index])
+                    minValues.append(values[index])
                 indexAbove = [i]
                 above = True
-    return timeMax, maxVals
+    return frameMaxValues, maxValues, frameMinValues, minValues
+
+
+def addTimeValue(framePointLs: List[Optional[int]], valuePointLs: List[Optional[float]], frameLs: List[int],
+                 valueLs: List[float], index: int):
+    """ Function appending the frame and the corresponding intensity value of that frame to the corresponding lists
+    given an index.
+
+    Parameters
+    ----------
+    framePointLs: List[Optional[int]]
+        List containing integers corresponding to the frames of either starts, max or end of the peaks.
+    valuePointLs: List[Optional[float]]
+        List containing float elements corresponding to the values at starts, max or end of the peaks.
+    frameLs: List[int]
+        List containing integers corresponding to the frame numbers.
+    valueLs: List[float]
+        List with float elements corresponding to the calcium intensities.
+    index: int
+        Integer indicating the index of either the start, max or end of a peak.
+
+    Returns
+    -------
+    framePointLs: List[Optional[int]]
+        List containing integers corresponding to the frames of either starts, max or end of the peaks.
+    valuePointLs: List[Optional[float]]
+        List containing float elements corresponding to the values at starts, max or end of the peaks.
+    """
+    if valueLs[index] < valueLs[index + 1]:
+        framePointLs.append(frameLs[index])
+        valuePointLs.append(valueLs[index])
+    else:
+        framePointLs.append(frameLs[index + 1])
+        valuePointLs.append(valueLs[index + 1])
+    return framePointLs, valuePointLs
 
 
 def startEndPeak(frames: List[int], values: List[float], derivative: List[float],
@@ -154,12 +199,8 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
                         if derivative[t] > 0:
                             pass
                         else:
-                            if values[t] < values[t+1]:
-                                timeStartPeaks.append(frames[t])
-                                valueStartPeaks.append(values[t])
-                            else:
-                                timeStartPeaks.append(frames[t+1])
-                                valueStartPeaks.append(values[t+1])
+                            timeStartPeaks, valueStartPeaks = addTimeValue(timeStartPeaks, valueStartPeaks, frames,
+                                                                           values, t)
                             break
                 below = False
         else:
@@ -174,12 +215,8 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
                         if derivative[t] < 0:
                             pass
                         else:
-                            if values[t] < values[t+1]:
-                                timeEndPeaks.append(frames[t])
-                                valueEndPeaks.append(values[t])
-                            else:
-                                timeEndPeaks.append(frames[t+1])
-                                valueEndPeaks.append(values[t+1])
+                            timeEndPeaks, valueEndPeaks = addTimeValue(timeEndPeaks, valueEndPeaks, frames,
+                                                                           values, t)
                             break
                 below = True
     return timeStartPeaks, valueStartPeaks, timeEndPeaks, valueEndPeaks
@@ -228,6 +265,35 @@ def getAmplitudes(peakPoints: List[Tuple[int, float, str, float]]) -> List[float
     amplitudes = []
     for i in range(len(peakPoints)):
         if peakPoints[i][2] == 'start':
+            try:
+                amplitudes.append((peakPoints[i+1][1] - peakPoints[i][1] + peakPoints[i+1][1] - peakPoints[i+2][1]) / 2)
+            except IndexError:
+                pass
+    return amplitudes
+
+
+def getAmplitudes2(peakPoints: List[Tuple[int, float, str, float]]) -> List[float]:
+    """ Function returning a list of peak amplitudes. The peak amplitudes are calculated as the average of the
+    difference between the max value of the peak and the value at the start of the peak and the max value of the peak
+    and the value at the end of the peak.
+
+    Parameters
+    ----------
+    peakPoints: List[Tuple[int, float, str, float]]
+        List of tuples where each tuple contains information regarding either a start point, max point or end point of
+        a peak. The first element corresponds to the frame index, the second element to the intensity value, the third
+        element indicates whether the point is either the start, max or end of a peak and the fourth element indicates
+        the time after 0 at which the frame was taken.
+
+    Returns
+    -------
+    amplitudes: List[float]
+        A list of floats where each float corresponds to the peak amplitude of a peak. The elements are in chronological
+        order.
+    """
+    amplitudes = []
+    for i in range(len(peakPoints)):
+        if peakPoints[i][2] == 'min':
             try:
                 amplitudes.append((peakPoints[i+1][1] - peakPoints[i][1] + peakPoints[i+1][1] - peakPoints[i+2][1]) / 2)
             except IndexError:
