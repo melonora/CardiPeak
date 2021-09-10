@@ -84,6 +84,14 @@ def start(doc):
         rend2 = p3.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
 
         def updateAvg(attr, old, new, frames, values):
+            """
+            Parameters
+            ----------
+
+            Returns
+            -------
+
+            """
             if cutSlider.value != 0 or cutSlider2.value != 0:
                 if cutSlider2.value > 0:
                     maxInd = -cutSlider2.value - 1
@@ -204,10 +212,16 @@ def start(doc):
                 text_input2.visible = True
                 output.data = {'output_dir': [text_input2.value], 'output_file': [text_input.value],
                                'ext': [ext.labels[ext.active]]}
+                settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
+                                 'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
+                                 'fps': [fpsSpinner.value]}
             else:
                 text_input2.visible = False
                 output.data = {'output_dir': [selectDir.value], 'output_file': [text_input.value],
                                'ext': [ext.labels[ext.active]]}
+                settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
+                                 'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
+                                 'fps': [fpsSpinner.value]}
 
         def slide_data(attr, old, new, point_index, source):
             dict_keys = list(source.data)

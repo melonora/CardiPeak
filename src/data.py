@@ -51,7 +51,15 @@ def getOutputDirs(root_dir: str) -> List:
         os.mkdir(root_dir)
         return []
 
+
 def noIntervalSave(analyzed_data, max_data, min_data, settings, output_data, plot3, raw_data):
+    """
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
     fps = settings.data['fps'][0]
     subDir = output_data.data['output_dir'][0]
     outputFile = output_data.data['output_file'][0]
@@ -110,6 +118,25 @@ def noIntervalSave(analyzed_data, max_data, min_data, settings, output_data, plo
 
 
 def save(analyzed_data, max_data, start_data, end_data, settings, output_data, plot1, plot2, raw_data):
+    """
+    Function to save the analysis results of calciumPeak.
+
+    Parameters
+    ----------
+    analyzed_data:
+    max_data:
+    start_data:
+    end_data:
+    settings:
+    output_data:
+    plot1:
+    plot2:
+    raw_data:
+
+    Returns
+    -------
+
+    """
     fps = settings.data['fps'][0]
     subDir = output_data.data['output_dir'][0]
     outputFile = output_data.data['output_file'][0]
