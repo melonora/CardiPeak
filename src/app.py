@@ -1,7 +1,7 @@
 from functools import partial
 from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
-from bokeh.models import Slider, Span, Button, Spinner, TapTool, Select
+from bokeh.models import Slider, Span, Button, Spinner, TapTool, Select, PointDrawTool
 from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup, Tabs, Panel
 from io import BytesIO
 from bokeh.server.server import Server
@@ -77,8 +77,10 @@ def start(doc):
         end_rend = p1.circle('timeEnd', 'endValue', source=source6, fill_color='purple', size=7)
         p1.renderers.extend([hline])
         p3.renderers.extend([hline])
-        p1.add_tools(TapTool(renderers=[max_rend, start_rend, end_rend]))
-        p3.add_tools(TapTool(renderers=[max_rend2, min_rend]))
+        p1rend = [max_rend, start_rend, end_rend]
+        p3rend = [max_rend2, min_rend]
+        p1.add_tools(TapTool(renderers=p1rend), PointDrawTool(renderers=p1rend))
+        p3.add_tools(TapTool(renderers=p3rend), PointDrawTool(renderers=p3rend))
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
         rend2 = p3.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
