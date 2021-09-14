@@ -299,3 +299,7 @@ def getAmplitudes2(peakPoints: List[Tuple[int, float, str, float]]) -> List[floa
             except IndexError:
                 pass
     return amplitudes
+
+
+def calc_threshold(values, percentage=50):
+    return min(values[100:]) + (max(values[100:]) - min(values[100:])) * percentage / 100
