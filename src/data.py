@@ -4,6 +4,13 @@ from typing import Tuple, List
 from utils import frameTime, getAmplitudes, getAmplitudes2
 import os
 import openpyxl
+from base64 import b64decode
+from io import BytesIO
+
+
+def base64_to_df(string):
+    decoded = b64decode(string)
+    return pd.read_csv(BytesIO(decoded), header=0, index_col=False)
 
 
 def obtainFrameValueLst(df: pd.DataFrame) -> Tuple[List[int], List[float]]:
