@@ -3,19 +3,17 @@ from bokeh.layouts import column, row
 from bokeh.plotting import figure, ColumnDataSource
 from bokeh.models import Slider, Span, Button, Spinner, TapTool, Select, PointDrawTool
 from bokeh.models.widgets import FileInput, TextInput, RadioButtonGroup, Tabs, Panel
-from io import BytesIO
 from bokeh.server.server import Server
-from base64 import b64decode
 from utils import *
 from data import *
 
 
 def start(doc):
     def initialPlot(attr, old, new):
-        decoded = b64decode(new)
-        df = pd.read_csv(BytesIO(decoded), header=0, index_col=False)
+        df = base64_to_df(new)
         frames, values = obtainFrameValueLst(df)
-        threshold = (min(values[100:]) + max(values[100:])) / 2
+        init_smooth = averageFilter(values, 3)
+        threshold = calc_threshold(init_smooth)
         derivative_values = derivative(values)
         time_max, max_val, time_min, min_val = getMax(frames, values, values, threshold)
         tStart, value_start, tEnd, value_end = startEndPeak(frames, values, derivative_values, threshold)
@@ -39,6 +37,7 @@ def start(doc):
         cutSlider3 = Slider(title='Cut first x derivative', start=0, end=30, step=1, value=0)
         cutSlider4 = Slider(title='Cut last x derivative', start=0, end=30, step=1, value=0)
         valueSlider = Slider(title='Selected datapoint index', start=0, end=len(frames), value=0, margin=(0, 30, 0, 40))
+        thresholdSpinner = Spinner(title="Threshold level relative to minimum value", low=0, high=100, step=5, value=50)
         fpsSpinner = Spinner(title="Enter framerate", step=50, value=600)
         text_input = TextInput(value_input="", title="Enter name output file without file extension")
         text_input2 = TextInput(value_input="", title="Enter name of new output directory",
@@ -64,7 +63,7 @@ def start(doc):
                                             ext=[ext.labels[ext.active]]))
         settings = ColumnDataSource(data=dict(AvgFiltern=[kernelSlider1.value], AvgFilterWidth=[kernelSlider2.value],
                                               SkipInitial=[cutSlider.value], SkipLast=[cutSlider2.value],
-                                              fps=[fpsSpinner.value]))
+                                              ThresholdLevel=[thresholdSpinner.value], fps=[fpsSpinner.value]))
 
         hline = Span(location=threshold, dimension='width', line_color='green', line_width=3)
         p1.line('frames', 'intensity', line_alpha=.5, source=source1)
@@ -94,6 +93,8 @@ def start(doc):
             -------
 
             """
+            threshold = calc_threshold(init_smooth, thresholdSpinner.value)
+            hline.location = threshold
             if cutSlider.value != 0 or cutSlider2.value != 0:
                 if cutSlider2.value > 0:
                     maxInd = -cutSlider2.value - 1
@@ -111,27 +112,10 @@ def start(doc):
                 while n != 0:
                     val2smooth = averageFilter(val2smooth, kernelSlider2.value)
                     n -= 1
-                derivative_values = derivative(val2smooth)
-                time_max, max_val, time_min, min_val = getMax(new_frames, new_values, val2smooth.tolist(), threshold)
-                source2.data = {'frames': new_frames, 'avgLine': val2smooth}
-                source4.data = {'timeMaxima': time_max, 'maxima': max_val,
-                                'set': ["auto" for i in range(len(max_val))]}
-                tStart, value_start, tEnd, value_end = startEndPeak(new_frames, new_values, derivative_values,
-                                                                 threshold)
-                source5.data = {'timeStart': tStart, 'startValue': value_start,
-                                'set': ["auto" for i in range(len(value_start))]}
-                source6.data = {'timeEnd': tEnd, 'endValue': value_end,
-                                'set': ["auto" for i in range(len(value_end))]}
-                source7.data = {'timeMinima': time_min, 'minima': min_val,
-                                'set': ["auto" for i in range(len(min_val))]}
-
                 if cutSlider4.value > 0:
                     maxInd = -cutSlider4.value - 1
                 else:
                     maxInd = -1
-                dy_frames = new_frames[cutSlider3.value: maxInd]
-                new_dy = derivative_values[cutSlider3.value: maxInd]
-                source3.data = {'frames': dy_frames, 'dy': new_dy}
 
                 rend.glyph.line_alpha = 1
                 rend2.glyph.line_alpha = 1
@@ -139,9 +123,23 @@ def start(doc):
                 rend.glyph.line_alpha = 0
                 rend2.glyph.line_alpha = 0
 
+            derivative_values = derivative(val2smooth)
+            time_max, max_val, time_min, min_val = getMax(new_frames, new_values, val2smooth.tolist(), threshold)
+            source2.data = {'frames': new_frames, 'avgLine': val2smooth}
+            source4.data = {'timeMaxima': time_max, 'maxima': max_val,
+                            'set': ["auto" for i in range(len(max_val))]}
+            tStart, value_start, tEnd, value_end = startEndPeak(new_frames, new_values, derivative_values,
+                                                                threshold)
+            source5.data = {'timeStart': tStart, 'startValue': value_start,
+                            'set': ["auto" for i in range(len(value_start))]}
+            source6.data = {'timeEnd': tEnd, 'endValue': value_end,
+                            'set': ["auto" for i in range(len(value_end))]}
+            source7.data = {'timeMinima': time_min, 'minima': min_val,
+                            'set': ["auto" for i in range(len(min_val))]}
+
             settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
                              'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
-                             'fps': [fpsSpinner.value]}
+                             'ThresholdLevel': [thresholdSpinner.value], 'fps': [fpsSpinner.value]}
 
         def cuttingPoints(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -184,7 +182,7 @@ def start(doc):
             source3.data = {'frames': dy_frames, 'dy': new_dy}
             settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
                              'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
-                             'fps': [fpsSpinner.value]}
+                             'ThresholdLevel': [thresholdSpinner.value], 'fps': [fpsSpinner.value]}
 
         def cuttingDerivative(attr, old, new, frames, values):
             if cutSlider2.value > 0: maxInd = -cutSlider2.value -1
@@ -216,14 +214,14 @@ def start(doc):
                                'ext': [ext.labels[ext.active]]}
                 settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
                                  'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
-                                 'fps': [fpsSpinner.value]}
+                                 'ThresholdLevel': [thresholdSpinner.value], 'fps': [fpsSpinner.value]}
             else:
                 text_input2.visible = False
                 output.data = {'output_dir': [selectDir.value], 'output_file': [text_input.value],
                                'ext': [ext.labels[ext.active]]}
                 settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
                                  'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
-                                 'fps': [fpsSpinner.value]}
+                                 'ThresholdLevel': [thresholdSpinner.value], 'fps': [fpsSpinner.value]}
 
         def slide_data(attr, old, new, point_index, source):
             dict_keys = list(source.data)
@@ -255,6 +253,7 @@ def start(doc):
         selectDir.on_change('value', output_data)
         ext.on_change('active', output_data)
         fpsSpinner.on_change('value', output_data)
+        thresholdSpinner.on_change('value', partial(updateAvg, frames=frames, values=values))
         bt.on_click(partial(save, source1, source4, source5, source6, settings, output, p1, p2, df))
         bt2.on_click(partial(noIntervalSave, source1, source4, source7, settings, output, p3, df))
         fileInp2.on_change('value', initialPlot)
@@ -263,12 +262,12 @@ def start(doc):
         source6.selected.on_change('indices', partial(callback, source=source6))
 
         layout2 = row(column(p1, valueSlider, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
-                                                          cutSlider3, cutSlider4, fpsSpinner,
+                                                          cutSlider3, cutSlider4, thresholdSpinner, fpsSpinner,
                                                           row(text_input, ext, bt), row(selectDir, text_input2),
                                                           fileInp2))
         layout3 = row(column(p3, valueSlider), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
-                                                      fpsSpinner, row(text_input, ext, bt2), row(selectDir,
-                                                                                                 text_input2), fileInp2)
+                                                      thresholdSpinner, fpsSpinner, row(text_input, ext, bt2),
+                                                      row(selectDir, text_input2), fileInp2)
                       )
         intervalPanel = Panel(child=layout2, title="Interval")
         noIntervalPanel = Panel(child=layout3, title="No interval")
