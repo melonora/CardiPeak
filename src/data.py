@@ -78,7 +78,6 @@ def noIntervalSave(analyzed_data, max_data, min_data, settings, output_data, plo
                                ['min'] * len(min_data.data['minima']), min_data.data['set'])), fps)
     lsPoints = sorted(lsMax + lsMin)
     lsData = frameTime(lsData, fps)
-    print(lsData)
 
     peakTime = [lsPoints[i + 2][-1] - lsPoints[i][-1] for i in range(len(lsPoints) - 2) if lsPoints[i][2] == 'min']
     peakMaxInterval = [lsMax[i + 1][-1] - lsMax[i][-1] for i in range(len(lsMax) - 1)]
