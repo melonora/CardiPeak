@@ -9,6 +9,9 @@ from data import *
 
 
 def start(doc):
+    """
+    Function to st
+    """
     def initialPlot(attr, old, new):
         df = base64_to_df(new)
         frames, values = obtainFrameValueLst(df)
@@ -45,6 +48,7 @@ def start(doc):
         ext = RadioButtonGroup(labels=['.csv', '.xlsx'], orientation='vertical', height_policy='min', active=0)
         bt = Button(label='Click to save', height_policy='max')
         bt2 = Button(label='Click to save', height_policy='max')
+        bt3 = Button(label='Click to create directory', height_policy='max')
         fileInp2 = FileInput(accept=".csv")
         selectDir = Select(title='output directory', value='new', options=['new']+outputDirs, width_policy='min')
 
@@ -210,6 +214,7 @@ def start(doc):
         def output_data(attr, old, new):
             if selectDir.value == 'new':
                 text_input2.visible = True
+                bt3.visible = True
                 output.data = {'output_dir': [text_input2.value], 'output_file': [text_input.value],
                                'ext': [ext.labels[ext.active]]}
                 settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
@@ -217,11 +222,21 @@ def start(doc):
                                  'ThresholdLevel': [thresholdSpinner.value], 'fps': [fpsSpinner.value]}
             else:
                 text_input2.visible = False
+                bt3.visible = False
                 output.data = {'output_dir': [selectDir.value], 'output_file': [text_input.value],
                                'ext': [ext.labels[ext.active]]}
                 settings.data = {'AvgFiltern': [kernelSlider1.value], 'AvgFilterWidth': [kernelSlider2.value],
                                  'SkipInitial': [cutSlider.value], 'SkipLast': [cutSlider2.value],
                                  'ThresholdLevel': [thresholdSpinner.value], 'fps': [fpsSpinner.value]}
+
+        def create_dir():
+            outputDir = '../output'
+            os.makedirs(os.path.join(outputDir, text_input2.value))
+            outputDirs = getOutputDirs('../output')
+            selectDir.options = ['new'] + outputDirs
+            selectDir.value = text_input2.value
+            text_input2.visible = False
+            bt3.visible = False
 
         def slide_data(attr, old, new, point_index, source):
             dict_keys = list(source.data)
@@ -256,6 +271,7 @@ def start(doc):
         thresholdSpinner.on_change('value', partial(updateAvg, frames=frames, values=values))
         bt.on_click(partial(save, source1, source4, source5, source6, settings, output, p1, p2, df))
         bt2.on_click(partial(noIntervalSave, source1, source4, source7, settings, output, p3, df))
+        bt3.on_click(create_dir)
         fileInp2.on_change('value', initialPlot)
         source4.selected.on_change('indices', partial(callback, source=source4))
         source5.selected.on_change('indices', partial(callback, source=source5))
@@ -263,11 +279,11 @@ def start(doc):
 
         layout2 = row(column(p1, valueSlider, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
                                                           cutSlider3, cutSlider4, thresholdSpinner, fpsSpinner,
-                                                          row(text_input, ext, bt), row(selectDir, text_input2),
+                                                          row(text_input, ext, bt), row(selectDir, text_input2, bt3),
                                                           fileInp2))
         layout3 = row(column(p3, valueSlider), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
                                                       thresholdSpinner, fpsSpinner, row(text_input, ext, bt2),
-                                                      row(selectDir, text_input2), fileInp2)
+                                                      row(selectDir, text_input2, bt3), fileInp2)
                       )
         intervalPanel = Panel(child=layout2, title="Interval")
         noIntervalPanel = Panel(child=layout3, title="No interval")
