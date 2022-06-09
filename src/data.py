@@ -77,8 +77,30 @@ def noIntervalSave(analyzed_data, max_data, min_data, settings, output_data, plo
     lsMin = frameTime(list(zip(min_data.data['timeMinima'], min_data.data['minima'],
                                ['min'] * len(min_data.data['minima']), min_data.data['set'])), fps)
     lsPoints = sorted(lsMax + lsMin)
-    lsData = frameTime(lsData, fps)
 
+    startIndex = -1
+    point = "min"
+    for i in range(len(lsPoints)):
+        endIndex = lsData.index(lsPoints[i][:2])
+        lsData[endIndex] += (lsPoints[i][2], lsPoints[i][3],)
+        if lsPoints[i][2] == 'min':
+            for i in range(startIndex+1, endIndex):
+                lsData[i] += ('maxMin', None,)
+                point = 'min'
+        else:
+            for i in range(startIndex+1, endIndex):
+                lsData[i] += ('minMax', None,)
+                point = 'max'
+        startIndex = endIndex
+
+    if point == 'max':
+        for i in range(startIndex+1, len(lsData)):
+            lsData[i] += ('minMax', None,)
+    else:
+        for i in range(startIndex+1, len(lsData)):
+            lsData[i] += ('maxMin', None,)
+
+    lsData = frameTime(lsData, fps)
     peakTime = [lsPoints[i + 2][-1] - lsPoints[i][-1] for i in range(len(lsPoints) - 2) if lsPoints[i][2] == 'min']
     peakMaxInterval = [lsMax[i + 1][-1] - lsMax[i][-1] for i in range(len(lsMax) - 1)]
     startMaxTime = [lsPoints[i + 1][-1] - lsPoints[i][-1] for i in range(len(lsPoints) - 1) if
@@ -86,8 +108,9 @@ def noIntervalSave(analyzed_data, max_data, min_data, settings, output_data, plo
     maxEndTime = [lsPoints[i + 1][-1] - lsPoints[i][-1] for i in range(len(lsPoints) - 1) if lsPoints[i][2] == 'max']
     amplitudes = getAmplitudes2(lsPoints)
 
-    pdData = pd.DataFrame({'Frame_index': [i[0] for i in lsData], 'Time_(s)': [i[2] for i in lsData],
-                           'Intensity': [i[1] for i in lsData]})
+    pdData = pd.DataFrame({'Frame_index': [i[0] for i in lsData], 'Time_(s)': [i[4] for i in lsData],
+                           'Intensity': [i[1] for i in lsData], 'Type': [i[2] for i in lsData],
+                           'set': [i[3] for i in lsData]})
 
     pdPeakMaxInterval = pd.DataFrame({'Peak_max_interval': peakMaxInterval})
     pdStartMaxT = pd.DataFrame({'start_max(s)': startMaxTime})
@@ -97,8 +120,8 @@ def noIntervalSave(analyzed_data, max_data, min_data, settings, output_data, plo
     pdSettings = pd.DataFrame(settings.data)
     pd_complete = pd.concat([pdData, pdPeakMaxInterval, pdStartMaxT, pdMaxEndT, pdPeakTime, pdAmplitudes,
                              pdSettings], ignore_index=True, axis=1)
-    pd_complete.columns = ['Frame_index', 'Time_(s)', 'Intensity',
-                           'Peak_max_interval', 'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] + \
+    pd_complete.columns = ['Frame_index', 'Time(s)', 'Intensity', 'Type', 'set',
+                           'Peak_max_interval', 'Min_max(s)', 'Max_min(s)', 'Peak_time(s)', 'Peak_amplitude'] + \
                           [i for i in settings.data]
 
     outputDir = '../output'
@@ -205,7 +228,7 @@ def save(analyzed_data, max_data, start_data, end_data, settings, output_data, p
     pdSettings = pd.DataFrame(settings.data)
     pd_complete = pd.concat([pdData, pdBgInterval, pdPeakMaxInterval, pdStartMaxT, pdMaxEndT, pdPeakTime, pdAmplitudes,
                              pdSettings], ignore_index=True, axis=1)
-    pd_complete.columns = ['Frame_index', 'Time_(s)', 'Intensity', 'Type', 'set', 'background_interval',
+    pd_complete.columns = ['Frame_index', 'Time(s)', 'Intensity', 'Type', 'set', 'background_interval',
                            'Peak_max_interval', 'Start_max(s)', 'Max_end(s)', 'Peak_time(s)', 'Peak_amplitude'] +\
                           [i for i in settings.data]
 
