@@ -9,6 +9,19 @@ from io import BytesIO
 
 
 def base64_to_df(string):
+    """ Function to decode a base64 string and subsequently read the byte string into a
+    pandas dataframe.
+
+    Parameters
+    ----------
+    string: base64
+        A base64 string encoding the experimental data
+
+    Returns
+    -------
+    pd.DataFrame
+        A pandas dataframe containing the experimental data.
+    """
     decoded = b64decode(string)
     return pd.read_csv(BytesIO(decoded), header=0, index_col=False)
 
