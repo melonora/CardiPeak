@@ -92,7 +92,7 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
         if above:
             if values[i] <= threshold:
                 minIndex, maxIndex = indexAbove[0], indexAbove[-1]
-                if len(values[minIndex:maxIndex]) >= 20:
+                if len(values[minIndex:maxIndex]) >= 5:
                     index = avgValues[minIndex:maxIndex].index(max(avgValues[minIndex:maxIndex])) + minIndex
                     frameMaxValues.append(frames[index])
                     maxValues.append(values[index])
@@ -105,7 +105,7 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
                 indexBelow.append(i)
             else:
                 minIndex, maxIndex = indexBelow[0], indexBelow[-1]
-                if len(values[minIndex:maxIndex]) >= 20:
+                if len(values[minIndex:maxIndex]) >= 5:
                     index = avgValues[minIndex:maxIndex].index(min(avgValues[minIndex:maxIndex])) + minIndex
                     frameMinValues.append(frames[index])
                     minValues.append(values[index])
@@ -302,4 +302,16 @@ def getAmplitudes2(peakPoints: List[Tuple[int, float, str, float]]) -> List[floa
 
 
 def calc_threshold(values, percentage=50):
+    """ Function to select a threshold based on a list of values where the lowest threshold is equal to the minimum
+    value and the largest threshold is equal to the maximum value.
+
+    Parameters
+    ----------
+    values
+    percentage
+
+    Returns
+    -------
+
+    """
     return min(values[100:]) + (max(values[100:]) - min(values[100:])) * percentage / 100
