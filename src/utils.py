@@ -92,7 +92,7 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
         if above:
             if values[i] <= threshold:
                 minIndex, maxIndex = indexAbove[0], indexAbove[-1]
-                if len(values[minIndex:maxIndex]) >= 5:
+                if len(values[minIndex:maxIndex]) >= 10:
                     index = avgValues[minIndex:maxIndex].index(max(avgValues[minIndex:maxIndex])) + minIndex
                     frameMaxValues.append(frames[index])
                     maxValues.append(values[index])
@@ -105,7 +105,7 @@ def getMax(frames: List[int], values: List[float], avgValues: List[float], thres
                 indexBelow.append(i)
             else:
                 minIndex, maxIndex = indexBelow[0], indexBelow[-1]
-                if len(values[minIndex:maxIndex]) >= 5:
+                if len(values[minIndex:maxIndex]) >= 10:
                     index = avgValues[minIndex:maxIndex].index(min(avgValues[minIndex:maxIndex])) + minIndex
                     frameMinValues.append(frames[index])
                     minValues.append(values[index])
