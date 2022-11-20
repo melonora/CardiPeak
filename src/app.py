@@ -82,7 +82,10 @@ def start(doc):
         p3.renderers.extend([hline])
         p1rend = [max_rend, start_rend, end_rend]
         p3rend = [max_rend2, min_rend]
-        p1.add_tools(TapTool(renderers=p1rend), PointDrawTool(renderers=p1rend))
+        p1.add_tools(TapTool(renderers=p1rend))
+        p1.add_tools(PointDrawTool(renderers=[start_rend], description="Add start peak"))
+        p1.add_tools(PointDrawTool(renderers=[max_rend], description="Add max peak"))
+        p1.add_tools(PointDrawTool(renderers=[end_rend], description="Add end peak"))
         p3.add_tools(TapTool(renderers=p3rend), PointDrawTool(renderers=p3rend))
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
