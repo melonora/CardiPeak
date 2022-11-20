@@ -193,7 +193,7 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
             else:
                 subSlice = slice(indexBelow[0], indexBelow[-1])
                 diff = indexBelow[-1] - indexBelow[0]
-                if len(values[subSlice]) >= 20:
+                if len(values[subSlice]) >= 10:
                     max_dyFrameIndex = derivative[subSlice].index(max(derivative[subSlice])) + indexBelow[0]
                     for t in range(max_dyFrameIndex, max(max_dyFrameIndex-diff, 0), -1):
                         if derivative[t] > 0:
@@ -209,7 +209,7 @@ def startEndPeak(frames: List[int], values: List[float], derivative: List[float]
             else:
                 indexBelow = [i]
                 if all([i < threshold for i in values[i:min(i+100, len(values))]]) and \
-                        len(derivative[i:min(i+100, len(derivative))]) > 20:
+                        len(derivative[i:min(i+100, len(derivative))]) > 10:
                     min_dyFrameIndex = derivative[i:i+100].index(min(derivative[i:i+100])) + i
                     for t in range(min_dyFrameIndex, len(derivative)-1):
                         if derivative[t] < 0:
