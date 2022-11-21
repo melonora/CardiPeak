@@ -241,12 +241,6 @@ def start(doc):
             text_input2.visible = False
             bt3.visible = False
 
-        # def slide_data(attr, old, new, point_index, source):
-        #     dict_keys = list(source.data)
-        #     source.patch({dict_keys[0]: [(point_index, frames[valueSlider.value])],
-        #                   dict_keys[1]: [(point_index, values[valueSlider.value])],
-        #                   dict_keys[2]: [(point_index, 'manual')]})
-
         def callback(attr, old, new, source):
             try:
                 # TODO: is there a way to prevent accessing protected member? .remove_on_change not possible with
@@ -258,7 +252,8 @@ def start(doc):
                 data_x = source.data[time_key][new[0]]
                 index = frames.index(data_x)
                 valueSlider.value = index
-                valueSlider.on_change('value', partial(readjust_glyph, frames=frames, values=values, point_index=new[0], source=source))
+                valueSlider.on_change('value', partial(readjust_glyph, frames=frames, values=values,
+                                                       point_index=new[0], source=source))
             except IndexError:
                 pass
 
@@ -266,7 +261,7 @@ def start(doc):
             keys = list(source.data)
             time_key = [i for i in keys if 'time' in i][0]
             value_key = [i for i in keys if 'Value' in i or 'max' in i][0]
-            if point_index:
+            if point_index is not None:
                 source.patch({time_key: [(point_index, frames[valueSlider.value])],
                               value_key: [(point_index, values[valueSlider.value])],
                               "set": [(point_index, 'manual')]})
@@ -277,8 +272,6 @@ def start(doc):
                     new_value = values[closest_frame]
 
                     index = source.data[time_key].index(new_frame)
-                    source.data[time_key][index] = closest_frame
-                    source.data[value_key][index] = new_value
                     source.patch({time_key: [(index, closest_frame)],
                                   value_key: [(index, new_value)],
                                   'set': [(index, 'manual')]})
