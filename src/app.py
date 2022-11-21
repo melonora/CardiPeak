@@ -241,11 +241,11 @@ def start(doc):
             text_input2.visible = False
             bt3.visible = False
 
-        def slide_data(attr, old, new, point_index, source):
-            dict_keys = list(source.data)
-            source.patch({dict_keys[0]: [(point_index, frames[valueSlider.value])],
-                          dict_keys[1]: [(point_index, values[valueSlider.value])],
-                          dict_keys[2]: [(point_index, 'manual')]})
+        # def slide_data(attr, old, new, point_index, source):
+        #     dict_keys = list(source.data)
+        #     source.patch({dict_keys[0]: [(point_index, frames[valueSlider.value])],
+        #                   dict_keys[1]: [(point_index, values[valueSlider.value])],
+        #                   dict_keys[2]: [(point_index, 'manual')]})
 
         def callback(attr, old, new, source):
             try:
@@ -253,30 +253,39 @@ def start(doc):
                 #  partial
                 if 'value' in valueSlider._callbacks and len(valueSlider._callbacks['value']) == 1:
                     del valueSlider._callbacks['value'][0]
-                data_x = source.data[list(source.data)[0]][new[0]]
+                keys = list(source.data)
+                time_key = [i for i in keys if 'time' in i][0]
+                data_x = source.data[time_key][new[0]]
                 index = frames.index(data_x)
                 valueSlider.value = index
-                valueSlider.on_change('value', partial(slide_data, point_index=new[0], source=source))
+                valueSlider.on_change('value', partial(readjust_glyph, frames=frames, values=values, point_index=new[0], source=source))
             except IndexError:
                 pass
 
-        def readjust_glyph(attr, old, new, source, frames, values):
+        def readjust_glyph(attr, old, new, source, frames, values, point_index=None):
             keys = list(source.data)
-            try:
-                time_key = [i for i in keys if 'time' in i][0]
-                value_key = [i for i in keys if 'Value' in i or 'max' in i][0]
-                new_frame = [i for i in source.data[time_key] if i not in set(frames)][0]
-                closest_frame = round(new_frame)
-                new_value = values[closest_frame]
+            time_key = [i for i in keys if 'time' in i][0]
+            value_key = [i for i in keys if 'Value' in i or 'max' in i][0]
+            if point_index:
+                source.patch({time_key: [(point_index, frames[valueSlider.value])],
+                              value_key: [(point_index, values[valueSlider.value])],
+                              "set": [(point_index, 'manual')]})
+            else:
+                try:
+                    new_frame = [i for i in source.data[time_key] if i not in set(frames)][0]
+                    closest_frame = round(new_frame)
+                    new_value = values[closest_frame]
 
-                index = source.data[time_key].index(new_frame)
-                source.data[time_key][index] = closest_frame
-                source.data[value_key][index] = new_value
-                source.patch({time_key: [(index, closest_frame)],
-                              value_key: [(index, new_value)],
-                              'set': [(index, 'manual')]})
-            except IndexError:
-                pass
+                    index = source.data[time_key].index(new_frame)
+                    source.data[time_key][index] = closest_frame
+                    source.data[value_key][index] = new_value
+                    source.patch({time_key: [(index, closest_frame)],
+                                  value_key: [(index, new_value)],
+                                  'set': [(index, 'manual')]})
+                except IndexError:
+                    pass
+
+
 
 
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
