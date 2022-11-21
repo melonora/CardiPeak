@@ -260,6 +260,25 @@ def start(doc):
             except IndexError:
                 pass
 
+        def readjust_glyph(attr, old, new, source, frames, values):
+            keys = list(source.data)
+            try:
+                time_key = [i for i in keys if 'time' in i][0]
+                value_key = [i for i in keys if 'Value' in i or 'max' in i][0]
+                new_frame = [i for i in source.data[time_key] if i not in set(frames)][0]
+                closest_frame = round(new_frame)
+                new_value = values[closest_frame]
+
+                index = source.data[time_key].index(new_frame)
+                source.data[time_key][index] = closest_frame
+                source.data[value_key][index] = new_value
+                source.patch({time_key: [(index, closest_frame)],
+                              value_key: [(index, new_value)],
+                              'set': [(index, 'manual')]})
+            except IndexError:
+                pass
+
+
         kernelSlider1.on_change('value', partial(updateAvg, frames=frames, values=values))
         kernelSlider2.on_change('value', partial(updateAvg, frames=frames, values=values))
         cutSlider.on_change('value', partial(cuttingPoints, frames=frames, values=values))
@@ -279,6 +298,9 @@ def start(doc):
         source4.selected.on_change('indices', partial(callback, source=source4))
         source5.selected.on_change('indices', partial(callback, source=source5))
         source6.selected.on_change('indices', partial(callback, source=source6))
+        source4.on_change('data', partial(readjust_glyph, source=source4, frames=frames, values=values))
+        source5.on_change('data', partial(readjust_glyph, source=source5, frames=frames, values=values))
+        source6.on_change('data', partial(readjust_glyph, source=source6, frames=frames, values=values))
 
         layout2 = row(column(p1, valueSlider, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
                                                           cutSlider3, cutSlider4, thresholdSpinner, fpsSpinner,
