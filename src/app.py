@@ -82,11 +82,13 @@ def start(doc):
         p3.renderers.extend([hline])
         p1rend = [max_rend, start_rend, end_rend]
         p3rend = [max_rend2, min_rend]
-        p1.add_tools(TapTool(renderers=p1rend))
-        p1.add_tools(PointDrawTool(renderers=[start_rend], description="Add start peak"))
-        p1.add_tools(PointDrawTool(renderers=[max_rend], description="Add max peak"))
-        p1.add_tools(PointDrawTool(renderers=[end_rend], description="Add end peak"))
-        p3.add_tools(TapTool(renderers=p3rend), PointDrawTool(renderers=p3rend))
+        p1.add_tools(TapTool(renderers=p1rend),
+                     PointDrawTool(renderers=[start_rend], description="Add start peak"),
+                     PointDrawTool(renderers=[max_rend], description="Add max peak"),
+                     PointDrawTool(renderers=[end_rend], description="Add end peak"))
+        p3.add_tools(TapTool(renderers=p3rend),
+                     PointDrawTool(renderers=[max_rend2], description="Add max peak"),
+                     PointDrawTool(renderers=[min_rend], description="Add min peak"))
 
         rend = p1.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
         rend2 = p3.line('frames', 'avgLine', source=source2, line_alpha=0, color='orange')
@@ -260,7 +262,7 @@ def start(doc):
         def readjust_glyph(attr, old, new, source, frames, values, point_index=None):
             keys = list(source.data)
             time_key = [i for i in keys if 'time' in i][0]
-            value_key = [i for i in keys if 'Value' in i or 'max' in i][0]
+            value_key = [i for i in keys if 'Value' in i or 'max' in i or 'min' in i][0]
             if point_index is not None:
                 source.patch({time_key: [(point_index, frames[valueSlider.value])],
                               value_key: [(point_index, values[valueSlider.value])],
@@ -300,9 +302,11 @@ def start(doc):
         source4.selected.on_change('indices', partial(callback, source=source4))
         source5.selected.on_change('indices', partial(callback, source=source5))
         source6.selected.on_change('indices', partial(callback, source=source6))
+        source7.selected.on_change('indices', partial(callback, source=source7))
         source4.on_change('data', partial(readjust_glyph, source=source4, frames=frames, values=values))
         source5.on_change('data', partial(readjust_glyph, source=source5, frames=frames, values=values))
         source6.on_change('data', partial(readjust_glyph, source=source6, frames=frames, values=values))
+        source7.on_change('data', partial(readjust_glyph, source=source7, frames=frames, values=values))
 
         layout2 = row(column(p1, valueSlider, p2), column(kernelSlider1, kernelSlider2, cutSlider, cutSlider2,
                                                           cutSlider3, cutSlider4, thresholdSpinner, fpsSpinner,
